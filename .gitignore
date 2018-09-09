@@ -1,0 +1,4 @@
+.idea
+storage/*
+!storage/.gitkeep
+config.ini
