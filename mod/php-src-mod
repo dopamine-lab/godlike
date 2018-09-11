@@ -1,0 +1,102 @@
+#!/usr/bin/env node
+'use strict';
+
+const read = require('fs').readFileSync;
+const write = require('fs').writeFileSync;
+const exists = require('fs').existsSync;
+const path = (process.argv[2] || '').replace(/\\/g, '/');
+
+if (!path || !exists(path)) {
+    console.error('\nInvalid or missing PHP source path: ' + path);
+    process.exit(1);
+}
+
+if (!exists(path + '/ext/standard/uniqid.h') || !exists(path + '/ext/standard/password.c')) {
+    console.error('\nStandard PHP extension is missing from source path: ' + path);
+    process.exit(1);
+}
+
+//
+
+const replaces = [
+    //
+    // Edit PDO class name to PDO_original / PDOStatement_original to allow debug override.
+    {
+        search: /(INIT_CLASS_ENTRY\(ce, *"PDO")/g,
+        replace: `INIT_CLASS_ENTRY(ce, "PDO_original"`,
+        file: '/ext/pdo/pdo_dbh.c',
+    },
+    {
+        search: /(INIT_CLASS_ENTRY\(ce, *"PDOStatement")/g,
+        replace: `INIT_CLASS_ENTRY(ce, "PDOStatement_original"`,
+        file: '/ext/pdo/pdo_stmt.c',
+    },
+    //
+    // Edit source compiler to allow `strict_types_force_all` and `strict_types_force_declare` settings in php.ini.
+    {
+        search: /(\(\(call\)->func->common\.fn_flags *& *ZEND_ACC_STRICT_TYPES\) *!= *0 *)/g,
+        replace: `$1 || zend_ini_long("strict_types_force_all", sizeof("strict_types_force_all"), 0)`,
+        file: '/Zend/zend_compile.h',
+    },
+    {
+        search: /(if *\(Z_LVAL\(value_zv\) *== *1 *)\) *{/g,
+        replace: `$1 || zend_ini_long("strict_types_force_declare", sizeof("strict_types_force_declare"), 0)) {`,
+        file: '/Zend/zend_compile.c',
+    },
+];
+
+//
+// Override random-ish functions
+let functions = {
+    'uniqid': ['/ext/standard/uniqid.h', '/ext/standard/uniqid.c'],
+    
+    'crypt': ['/ext/standard/php_crypt.h', '/ext/standard/crypt.c'],
+    
+    'password_hash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
+    'password_verify': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
+    'password_needs_rehash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
+    'password_get_info': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
+    
+    'random_int': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
+    'random_bytes': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
+};
+
+for (let fn of Object.keys(functions)) {
+    for (let file of functions[fn]) {
+        replaces.push(Object.assign({
+            search: new RegExp('PHP_FUNCTION( *)\\(( *)' + fn + '( *)\\)', 'g'),
+            replace: 'PHP_FUNCTION$1($2' + fn + '_original$3)',
+            file: file,
+        }));
+    }
+
+    // Maybe needed some day:
+    //
+    // PHP_FUNCTION(crypt);
+    // PHP_MINIT_FUNCTION(crypt);
+    // PHP_MSHUTDOWN_FUNCTION(crypt);
+    // PHP_RINIT_FUNCTION(crypt);
+}
+
+//
+
+let files = {};
+
+for (let {search, replace, file} of replaces) {
+    let src = files[file] = files[file] || read(path + file, 'utf8');
+    
+    if (!src.match(search)) {
+        console.error(`\nCannot match replace regex: ${search}\nIn src file: ${path + file}`);
+        process.exit(1);
+    }
+    
+    src = src.replace(search, replace);
+}
+
+for (let file of Object.keys(files)) {
+    write(path + file, files[file], 'utf8');
+}
+
+
+//
+console.log('\nDone.');

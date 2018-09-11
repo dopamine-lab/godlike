@@ -7,7 +7,7 @@
 require_once __DIR__ . '/PDO.php';
 require_once __DIR__ . '/PDOLog.php';
 
-if (class_exists('\PDOStatement')) return;
+if (class_exists('PDOStatement')) return;
 
 
 class PDOStatement {

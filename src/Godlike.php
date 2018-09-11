@@ -2,6 +2,7 @@
 
 namespace godlike;
 
+require_once __DIR__ . '/std/Functions.php';
 require_once __DIR__ . '/pdo/PDO.php';
 require_once __DIR__ . '/common/Clock.php';
 require_once __DIR__ . '/common/Log.php';
