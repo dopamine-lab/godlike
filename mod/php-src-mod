@@ -55,6 +55,17 @@ const replaces = [
         replace: `INIT_CLASS_ENTRY(ce_immutable, "DateTimeImmutable_original"`,
         file: '/ext/date/php_date.c',
     },
+    //
+    {
+        search: /(date_create_immutable_from_format|date_create_immutable|date_create_from_format|date_create)([^_])/g,
+        replace: `$1_original$2`,
+        file: '/ext/date/php_date.c',
+    },
+    {
+        search: /(date_create_immutable_from_format|date_create_immutable|date_create_from_format|date_create)([^_])/g,
+        replace: `$1_original$2`,
+        file: '/ext/date/php_date.h',
+    },
 ];
 
 let functions = {
@@ -80,10 +91,6 @@ let functions = {
     'strtotime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
     'strftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
     'gmstrftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
-    'date_create': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
-    'date_create_from_format': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
-    'date_create_immutable': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
-    'date_create_immutable_from_format': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
     'microtime': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
     'gettimeofday': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
     'unixtojd': ['/ext/calendar/php_calendar.h', '/ext/calendar/calendar.c'],
@@ -92,8 +99,8 @@ let functions = {
 for (let fn of Object.keys(functions)) {
     for (let file of functions[fn]) {
         replaces.push(Object.assign({
-            search: new RegExp('( *)(PHP_FUNCTION|PHP_[^_]+_FUNCTION|PHP_FE)( *\\( *)' + fn + '( *[\\),])', 'g'),
-            replace: '$1$2$3' + fn + '_original$5',
+            search: new RegExp('( *)(PHP_FUNCTION|PHP_FE)( *\\( *)' + fn + '( *[\\),])', 'g'),
+            replace: '$1$2$3' + fn + '_original$4',
             file: file,
         }));
     }
