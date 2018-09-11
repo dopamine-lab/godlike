@@ -43,39 +43,60 @@ const replaces = [
         replace: `$1 || zend_ini_long("strict_types_force_declare", sizeof("strict_types_force_declare"), 0)) {`,
         file: '/Zend/zend_compile.c',
     },
+    //
+    // DateTime
+    {
+        search: /(INIT_CLASS_ENTRY\(ce_date, *"DateTime")/g,
+        replace: `INIT_CLASS_ENTRY(ce_date, "DateTime_original"`,
+        file: '/ext/date/php_date.c',
+    },
+    {
+        search: /(INIT_CLASS_ENTRY\(ce_immutable, *"DateTimeImmutable")/g,
+        replace: `INIT_CLASS_ENTRY(ce_immutable, "DateTimeImmutable_original"`,
+        file: '/ext/date/php_date.c',
+    },
 ];
 
-//
-// Override random-ish functions
 let functions = {
+    // Random-ish functions
     'uniqid': ['/ext/standard/uniqid.h', '/ext/standard/uniqid.c'],
-    
     'crypt': ['/ext/standard/php_crypt.h', '/ext/standard/crypt.c'],
-    
     'password_hash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
     'password_verify': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
     'password_needs_rehash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
     'password_get_info': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
-    
     'random_int': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
     'random_bytes': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
+    
+    // Date and time functions
+    'time': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'mktime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'gmmktime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'date': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'gmdate': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'idate': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'getdate': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'localtime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'strtotime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'strftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'gmstrftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'date_create': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'date_create_from_format': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'date_create_immutable': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'date_create_immutable_from_format': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
+    'microtime': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
+    'gettimeofday': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
+    'unixtojd': ['/ext/calendar/php_calendar.h', '/ext/calendar/calendar.c'],
 };
 
 for (let fn of Object.keys(functions)) {
     for (let file of functions[fn]) {
         replaces.push(Object.assign({
-            search: new RegExp('PHP_FUNCTION( *)\\(( *)' + fn + '( *)\\)', 'g'),
-            replace: 'PHP_FUNCTION$1($2' + fn + '_original$3)',
+            search: new RegExp('( *)(PHP_FUNCTION|PHP_[^_]+_FUNCTION|PHP_FE)( *\\( *)' + fn + '( *[\\),])', 'g'),
+            replace: '$1$2$3' + fn + '_original$5',
             file: file,
         }));
     }
-
-    // Maybe needed some day:
-    //
-    // PHP_FUNCTION(crypt);
-    // PHP_MINIT_FUNCTION(crypt);
-    // PHP_MSHUTDOWN_FUNCTION(crypt);
-    // PHP_RINIT_FUNCTION(crypt);
 }
 
 //
