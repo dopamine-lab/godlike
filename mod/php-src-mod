@@ -90,7 +90,7 @@ for (let {search, replace, file} of replaces) {
         process.exit(1);
     }
     
-    src = src.replace(search, replace);
+    files[file] = src.replace(search, replace);
 }
 
 for (let file of Object.keys(files)) {

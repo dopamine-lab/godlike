@@ -103,7 +103,7 @@ final class Godlike {
     /** @var bool */
     private $logEnabled;
     
-    /** @var bool */
+    /** @var string */
     private $logPath;
     
     /** @var bool */
@@ -139,7 +139,7 @@ final class Godlike {
         $this->strictForceDeclare = self::bool($config['strict_force_declare'] ?? true);
         $this->headersEnabled = self::bool($config['headers_enabled'] ?? true);
         $this->logEnabled = self::bool($config['log_enabled'] ?? true);
-        $this->logPath = self::bool($config['log_path'] ?? true);
+        $this->logPath = self::string($config['log_path'] ?? null);
         $this->statsEnabled = self::bool($config['stats_enabled'] ?? true);
         $this->statsDuration = self::bool($config['stats_duration'] ?? true);
         $this->statsQueries = self::bool($config['stats_queries'] ?? true);
@@ -164,7 +164,9 @@ final class Godlike {
         $this->init($params['name'] ?? null, $params['tags'] ?? []);
 
         // Append file is not called if there is a fatal error, se we do it this way.
-        register_shutdown_function([$this, 'append']);
+        register_shutdown_function(function () {
+            $this->append();
+        });
 
         // Execute the seeder (with temp seed if provided).
         $this->seeder->exec($params['rng'] ?? null, $params['time'] ?? null);
@@ -201,25 +203,29 @@ final class Godlike {
         
         // Log request info to file.
         if ($this->logEnabled) {
+            $this->log->text('');
             $this->log->header((PHP_SAPI === 'cli' ? 'CLI #' : 'CGI #') . $this->process->getFullId(true), Log::HEADER_L);
-            $this->log->text("Time: {$this->info['date']} / {$this->info['time']}");
+            $this->log->text("Time: {$this->info['request']['date']} / {$this->info['request']['time']}");
             $this->log->text("Seed: {$this->info['seed']['rng']} / {$this->info['seed']['time']}");
         }
         
         if (PHP_SAPI === 'cli') {
-            if ($this->logEnabled) {
+            if ($this->logEnabled && !empty($_SERVER['argv'])) {
                 $this->log->text('Argv: ' . json_encode($_SERVER['argv']));
             }
         } else {
             if ($this->logEnabled) {
-                $this->log->text('Get: ' . json_encode($_GET));
-                $this->log->text('Post: ' . json_encode($_POST));
+                $this->log->text('Request: ' . $_SERVER['REQUEST_METHOD'] . ' ' . $_SERVER['REQUEST_URI']);
+                if (!empty($_GET)) $this->log->text('Get: ' . json_encode($_GET));
+                if (!empty($_POST)) $this->log->text('Post: ' . json_encode($_POST));
             }
     
             // Intercept all output to be able to print HTTP headers at the end.
             // This only applies to HTTP api, CLI works as usual.
             ob_start();
         }
+        
+        if ($this->logEnabled) $this->log->text("\n");
     }
 
     /**
@@ -237,20 +243,21 @@ final class Godlike {
         $this->info['transactions']['list'] = \PDOLog::getTransactions();
         $this->info['transactions']['count'] = \PDOLog::getTransactionsCount();
         $this->info['transactions']['duration'] = \PDOLog::getTransactionsTime();
-    
+        
         // Log to file.
         if ($this->logEnabled) {
+            $this->log->text('');
+            
             if ($this->statsEnabled) {
                 $this->log->header('Stats:', Log::HEADER_M);
                 if ($this->statsDuration)     $this->log->text("Duration: {$this->info['request']['duration']} us");
-                if ($this->statsQueries)      $this->log->text("Queries: {$this->info['queries']['count']} / {$this->info['queries']['time']} us");
-                if ($this->statsTransactions) $this->log->text("Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['time']} us");
+                if ($this->statsQueries)      $this->log->text("Queries: {$this->info['queries']['count']} / {$this->info['queries']['duration']} us");
+                if ($this->statsTransactions) $this->log->text("Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['duration']} us");
             }
-            
-            $this->log->text('');
         }
     
         // TODO: log queries
+        // TODO: seed time for pdo
 
         // Set HTTP headers.
         if (PHP_SAPI === 'cli') return;
@@ -262,8 +269,8 @@ final class Godlike {
         
             if ($this->statsEnabled) {
                 if ($this->statsDuration)     header("X-Godlike-R-Duration: {$this->info['request']['duration']} us");
-                if ($this->statsQueries)      header("X-Godlike-R-Queries: {$this->info['queries']['count']} / {$this->info['queries']['time']} us");
-                if ($this->statsTransactions) header("X-Godlike-R-Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['time']} us");
+                if ($this->statsQueries)      header("X-Godlike-R-Queries: {$this->info['queries']['count']} / {$this->info['queries']['duration']} us");
+                if ($this->statsTransactions) header("X-Godlike-R-Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['duration']} us");
             }
         
             foreach (Logger::getMessages() as $m) header('X-Godlike-U-' . $m);
@@ -344,25 +351,25 @@ final class Godlike {
         ], JSON_PRETTY_PRINT);
     }
 
-    private static function int($a, $null = true): int {
+    private static function int($a, $null = true): ?int {
         if (is_int($a)) return $a;
         if ($null && ($a === null || (!$a && $a !== '0' && $a !== 0))) return null;
         return (int) $a;
     }
 
-    private static function float($a, $null = true): float {
+    private static function float($a, $null = true): ?float {
         if (is_float($a)) return $a;
         if ($null && ($a === null || (!$a && $a !== '0' && $a !== 0))) return null;
         return (float) $a;
     }
     
-    private static function string($a, $null = true): string {
+    private static function string($a, $null = true): ?string {
         if (is_string($a) && $a !== null) return $a;
         if ($null && $a === null) return null;
         return (string) $a;
     }
     
-    private static function bool($a, $null = true): bool {
+    private static function bool($a, $null = true): ?bool {
         if (is_bool($a)) return $a;
         if ($null && ($a === null || (!$a && $a !== '0' && $a !== 0))) return null;
     

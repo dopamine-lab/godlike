@@ -37,6 +37,8 @@ class Timer {
 
         self::$clock = $clock;
         self::$log = $log;
+    
+        if (!self::$timeBoot) Timer::boot();
     }
 
     /**
@@ -110,8 +112,3 @@ class Timer {
         return self::$clock->micro($real) - self::$timeBoot[$real ? 0 : 1];
     }
 }
-
-
-// Call boot method here to log the php request/process boot timestamp.
-// Will be used to calculate offsets.
-Timer::boot();

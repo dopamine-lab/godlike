@@ -64,23 +64,23 @@ final class Log {
      * @param int    $size
      */
     public function header(string $title, int $size = Log::HEADER_S): void {
-        $string = '';
+        $string = "\n";
 
         if ($size >= Log::HEADER_L) {
             $string .= str_repeat('=', 80) . "\n";
             $string .= '| ' . $this->formatTitle($title, 78) . "\n";
-            $string .= str_repeat('=', 80) . "\n\n";
+            $string .= str_repeat('=', 80) . "\n";
         }
 
         elseif ($size === Log::HEADER_M) {
-            $string .= '| ' . $this->formatTitle($title, 58) . "\n";
-            $string .= str_repeat('-', 60) . "\n";
+            $string .= '| ' . $this->formatTitle($title, 38) . "\n";
+            $string .= str_repeat('-', 40);
         }
 
         else {
             $width = \strlen($title);
             $string  = '| ' . $this->formatTitle($title, $width) . "\n";
-            $string .= str_repeat('-', $width + 2) . "\n";
+            $string .= str_repeat('-', $width + 2);
         }
 
         $this->write($string);
@@ -120,17 +120,7 @@ final class Log {
      * @param bool   $append
      */
     private function write(string $string, bool $append = true): void {
-        if (!$this->path) {
-            if (!$append) @file_put_contents(ini_get('error_log'), $string);
-            else {
-                /** @noinspection ForgottenDebugOutputInspection */
-                error_log($string);
-            }
-            
-            return;
-        }
-
-        if ($append) file_put_contents($this->path, $string . "\n", FILE_APPEND);
-        else file_put_contents($this->path, $string . "\n");
+        $path = $this->path ?: ini_get('error_log');
+        @file_put_contents($path, "$string\n", $append ? FILE_APPEND : 0);
     }
 }

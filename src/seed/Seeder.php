@@ -63,8 +63,8 @@ class Seeder {
     public function exec(?int $tmpRng = null, ?int $tmpTime = null): void {
         // Load from storage
         $seeds = $this->storage->getMany('seed', ['rng', 'time']);
-        $this->rng  = $seeds['rng']  ?? SeedRng::load($seeds['rng'] ?? []);
-        $this->time = $seeds['time'] ?? SeedTime::load($seeds['time'] ?? []);
+        $this->rng  = SeedRng::load($seeds['rng'] ?? []);
+        $this->time = SeedTime::load($seeds['time'] ?? []);
     
         if ($tmpRng === null) $this->rng->increment()->apply();
         else SeedRng::create($tmpRng)->apply();

@@ -110,7 +110,7 @@ class SeedTime implements \JsonSerializable {
      *
      * @return SeedTime
      */
-    public function apply(bool $pdo = true, bool $libfaketime = false, ?string $pidFile = null): SeedTime {
+    public function apply(bool $pdo = false, bool $libfaketime = false, ?string $pidFile = null): SeedTime {
         if ($this->timestamp === null) {
             if ($libfaketime) {
                 @unlink('/etc/faketimerc');
