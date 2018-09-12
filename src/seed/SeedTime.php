@@ -132,6 +132,9 @@ class SeedTime implements \JsonSerializable {
         if ($s > 4133980801000) throw new \InvalidArgumentException('Time seed can be max: ' . date('Y-m-d H:i:s', 4133980801000));
         if ($s < 0) throw new \InvalidArgumentException('Time seed can be min: ' . date('Y-m-d H:i:s', 0));
     
+        // Regular php seed.
+        if (class_exists('FakeTime')) \FakeTime::set($this->timestamp * 1000);
+        
         if ($pdo) {
             /** @noinspection PhpUndefinedClassInspection */
             if (!method_exists(\PDO::class, 'setTimestamp')) {

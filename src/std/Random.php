@@ -1,5 +1,8 @@
 <?php
 
+/** @noinspection PhpUndefinedFunctionInspection */
+/** @noinspection AutoloadingIssuesInspection */
+
 //
 // Standard random-ish methods overridden to make them seedable.
 
@@ -31,7 +34,7 @@ if (!function_exists('crypt') && function_exists('crypt_original')) {
     function crypt($str, $salt = null) {
         if (!$salt) {
             $s = 's' . mt_rand(1000000, 9999999);
-        
+            
             /** @noinspection CryptographicallySecureAlgorithmsInspection */
             if (CRYPT_STD_DES === 1)  $salt = $s;
             /** @noinspection CryptographicallySecureAlgorithmsInspection */
@@ -55,7 +58,7 @@ if (!function_exists('password_hash') && function_exists('password_hash_original
         $options = $options ?? [];
         $options['salt'] = $options['salt'] ?? '' ?: str_pad('s-' . mt_rand(1000000, 9999999), 22);
         
-        return @\password_hash_original($password, $algo, $options ?? []);
+        return \password_hash_original($password, $algo, $options ?? []);
     }
     
     function password_verify($password, $hash) {
