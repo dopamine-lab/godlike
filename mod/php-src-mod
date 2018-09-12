@@ -66,18 +66,24 @@ const replaces = [
         replace: `$1_original$2`,
         file: '/ext/date/php_date.h',
     },
+    {
+        search: /(install-pear-installer: .*?)\n/,
+        replace: `$1\n	@$(top_builddir)/sapi/cli/php -c pear pear/fix-time.php\n`,
+        file: '/pear/Makefile.frag',
+    }
+    //
 ];
 
 let functions = {
     // Random-ish functions
-    'uniqid': ['/ext/standard/uniqid.h', '/ext/standard/uniqid.c'],
-    'crypt': ['/ext/standard/php_crypt.h', '/ext/standard/crypt.c'],
-    'password_hash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
-    'password_verify': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
-    'password_needs_rehash': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
-    'password_get_info': ['/ext/standard/php_password.h', '/ext/standard/password.c'],
-    'random_int': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
-    'random_bytes': ['/ext/standard/php_random.h', '/ext/standard/random.c'],
+    'uniqid': ['/ext/standard/uniqid.h', '/ext/standard/uniqid.c', '/ext/standard/basic_functions.c'],
+    'crypt': ['/ext/standard/php_crypt.h', '/ext/standard/crypt.c', '/ext/standard/basic_functions.c'],
+    'password_hash': ['/ext/standard/php_password.h', '/ext/standard/password.c', '/ext/standard/basic_functions.c'],
+    'password_verify': ['/ext/standard/php_password.h', '/ext/standard/password.c', '/ext/standard/basic_functions.c'],
+    'password_needs_rehash': ['/ext/standard/php_password.h', '/ext/standard/password.c', '/ext/standard/basic_functions.c'],
+    'password_get_info': ['/ext/standard/php_password.h', '/ext/standard/password.c', '/ext/standard/basic_functions.c'],
+    'random_int': ['/ext/standard/php_random.h', '/ext/standard/random.c', '/ext/standard/basic_functions.c'],
+    'random_bytes': ['/ext/standard/php_random.h', '/ext/standard/random.c', '/ext/standard/basic_functions.c'],
     
     // Date and time functions
     'time': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
@@ -91,15 +97,15 @@ let functions = {
     'strtotime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
     'strftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
     'gmstrftime': ['/ext/date/php_date.h', '/ext/date/php_date.c'],
-    'microtime': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
-    'gettimeofday': ['/ext/standard/microtime.h', '/ext/standard/microtime.c'],
+    'microtime': ['/ext/standard/microtime.h', '/ext/standard/microtime.c', '/ext/standard/basic_functions.c'],
+    'gettimeofday': ['/ext/standard/microtime.h', '/ext/standard/microtime.c', '/ext/standard/basic_functions.c'],
     'unixtojd': ['/ext/calendar/php_calendar.h', '/ext/calendar/calendar.c'],
 };
 
 for (let fn of Object.keys(functions)) {
     for (let file of functions[fn]) {
         replaces.push(Object.assign({
-            search: new RegExp('( *)(PHP_FUNCTION|PHP_FE)( *\\( *)' + fn + '( *[\\),])', 'g'),
+            search: new RegExp('( *)(PHP_FUNCTION|PHP_FE)( *\\( *)' + fn + '( *(\\)|,))', 'g'),
             replace: '$1$2$3' + fn + '_original$4',
             file: file,
         }));
@@ -124,6 +130,25 @@ for (let {search, replace, file} of replaces) {
 for (let file of Object.keys(files)) {
     write(path + file, files[file], 'utf8');
 }
+
+write(path + '/pear/fix-time.php', `<?php
+
+$p = new Phar(__DIR__ . '/install-pear-nozlib.phar', 0, 'install-pear-nozlib.phar');
+
+$code = "
+
+error_reporting(1803);
+
+function time() {return time_original();}
+function microtime(\\$t) {return microtime_original(\\$t);}
+function date(\\$f, \\$t = null) {return date_original(\\$f, \\$t ?? time());}
+
+";
+
+$p['index.php'] = str_replace('error_reporting(1803);', $code, $p['index.php']->getContent());
+`);
+
+write(path + '/pear/php.ini', read(path + '/php.ini-development', 'utf8').replace(/;*phar.readonly *= *On/, 'phar.readonly = Off'));
 
 
 //
