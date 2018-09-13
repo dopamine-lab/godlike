@@ -1,0 +1,15 @@
+{
+  "name": "godlike",
+  "version": "1.0.0",
+  "require": {
+    "php": "7"
+  },
+  "config": {
+    "vendor-dir": "lib",
+    "preferred-install": {
+      "*": "dist"
+    }
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
+}

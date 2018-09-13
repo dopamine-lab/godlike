@@ -1,0 +1,31 @@
+<idea-plugin version="2">
+  <id>me.artpsb.idea.plugin.godlike</id>
+  <name>Godlike</name>
+  <version>1.0.0</version>
+  <vendor email="info@dopamine.bg" url="https://dopamine.bg">Dopamine</vendor>
+
+  <description><![CDATA[
+    Provides auto-complete support of the Godlike lib.
+  ]]></description>
+
+  <change-notes><![CDATA[
+    <h3>1.0.0</h3>
+    <ul>
+      <li>Release upload test.</li>
+    </ul>
+    <h3>0.1</h3>
+    <ul>
+      <li>Initial support.</li>
+    </ul>
+  ]]>
+  </change-notes>
+
+  <idea-version since-build="163.3984"/>
+
+  <depends>com.intellij.modules.platform</depends>
+  <depends>com.jetbrains.php</depends>
+
+  <extensions defaultExtensionNs="com.jetbrains.php">
+    <libraryRoot id="godlike" path="/godlike/" runtime="false"/>
+  </extensions>
+</idea-plugin>
