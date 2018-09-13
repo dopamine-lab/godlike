@@ -30,7 +30,7 @@ final class Clock {
      * @return int
      */
     public function unix(bool $real = false): int {
-        return $this->now($real, 1000000);
+        return __godlike_timestamp_cache($real)[2];
     }
 
     /**
@@ -39,7 +39,7 @@ final class Clock {
      * @return int
      */
     public function milli(bool $real = false): int {
-        return $this->now($real, 1000);
+        return __godlike_timestamp_cache($real)[1];
     }
 
     /**
@@ -48,7 +48,7 @@ final class Clock {
      * @return int
      */
     public function micro(bool $real = false): int {
-        return $this->now($real, 1);
+        return __godlike_timestamp_cache($real)[0];
     }
 
     /**
@@ -85,23 +85,5 @@ final class Clock {
         $f = (int) bcmod($microtime, $operand);
 
         return gmdate($format, $t) . '.' . str_pad($f, 3, '0', STR_PAD_LEFT);
-    }
-
-    //
-
-    /**
-     * @param bool $real
-     * @param int  $divisor
-     *
-     * @return int
-     */
-    private function now(bool $real, int $divisor): int {
-        $t = microtime(true) * 1000000;
-        $e = getenv('FAKETIME_REALTIME');
-
-        // If env var is empty or wrong format, maybe there is only realtime anyway.
-        if (!$real || !is_numeric($e)) $e = (string) $t;
-
-        return (int) bcdiv($e, (string) $divisor, 0);
     }
 }

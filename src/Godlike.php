@@ -152,7 +152,7 @@ final class Godlike {
         $this->log     = Log::create($this->logPath);
         $this->storage = Storage::create(\dirname(__DIR__) . '/storage');
         $this->process = Process::create($this->storage, $name, $tags);
-        $this->seeder  = Seeder::create($this->storage);
+        $this->seeder  = Seeder::create($this->storage, $this->clock);
     }
 
     /**

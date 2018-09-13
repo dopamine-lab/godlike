@@ -9,35 +9,41 @@ require_once __DIR__ . '/SeedTime.php';
 class Seeder {
     /** @var Seeder */
     private static $instance;
-
+    
     /**
      * @param Storage $storage
+     * @param Clock   $clock
      *
      * @return Seeder
      */
-    public static function create(Storage $storage): Seeder {
+    public static function create(Storage $storage, Clock $clock): Seeder {
         // This is an internal class for the godlike lib.
         // We must forbid using it in the app code.
         if (self::$instance) throw new \LogicException('Godlike Seeder cannot be constructed more than once.');
 
-        self::$instance = new self($storage);
+        self::$instance = new self($storage, $clock);
         return self::$instance;
     }
-
+    
     /** @var Storage */
     private $storage;
+    
+    /** @var Clock */
+    private $clock;
 
     /** @var SeedRng */
     private $rng;
 
     /** @var SeedTime */
     private $time;
-
+    
     /**
      * @param Storage $storage
+     * @param Clock   $clock
      */
-    private function __construct(Storage $storage) {
+    private function __construct(Storage $storage, Clock $clock) {
         $this->storage = $storage;
+        $this->clock = $clock;
     }
 
     /**
@@ -61,16 +67,21 @@ class Seeder {
      * @param int|null $tmpTime
      */
     public function exec(?int $tmpRng = null, ?int $tmpTime = null): void {
+        // Get current real time
+        $now = $this->clock->milli(true);
+        
         // Load from storage
-        $seeds = $this->storage->getMany('seed', ['rng', 'time']);
-        $this->rng  = SeedRng::load($seeds['rng'] ?? []);
-        $this->time = SeedTime::load($seeds['time'] ?? []);
+        ['rng' => $r, 'time' => $t] = $this->storage->getMany('seed', ['rng', 'time']);
     
+        $this->rng  = $r ? SeedRng::load($r) : SeedRng::create();
+        $this->time = $t ? SeedTime::load($t) : SeedTime::create();
+    
+        
         if ($tmpRng === null) $this->rng->increment()->apply();
         else SeedRng::create($tmpRng)->apply();
     
-        if ($tmpTime === null) $this->time->increment()->apply();
-        else SeedRng::create($tmpTime)->apply();
+        if ($tmpTime === null) $this->time->increment($now)->apply();
+        else SeedTime::create($tmpTime)->apply();
         
         $cr = $this->rng->isChanged();
         $ct = $this->time->isChanged();

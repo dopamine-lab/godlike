@@ -11,32 +11,17 @@ if (class_exists('PDO')) return;
 
 
 class PDO extends PDO_original {
-    /** @var PDO */
-    private static $instances = [];
+    /** @var int */
+    private static $__connectionId = 1;
     
     /** @var int */
-    private static $id = 1;
-    
-    /** @var int */
-    private static $timestamp;
+    private static $__timestamp;
     
     /** @var string */
-    private $_dsn;
+    private $__dsn;
     
     /** @var string */
-    private $_user;
-    
-    /**
-     * @param int? $microseconds
-     */
-    public static function setTimestamp(?int $microseconds = null): void {
-        self::$timestamp = (int) $microseconds;
-        
-        foreach (self::$instances as $instance) {
-            /** @var $instance PDO */
-            $instance->exec('SET timestamp = ' . \bcdiv(self::$timestamp, '1000000', 6));
-        }
-    }
+    private $__user;
     
     /**
      * @param string      $dsn
@@ -49,11 +34,11 @@ class PDO extends PDO_original {
             throw new \LogicException('This error mode is not supported. Please use only ERRMODE_EXCEPTION.');
         }
 
-        $id = self::$id ++;
+        $id = self::$__connectionId ++;
         
         // Save these variables to add them to the query log later.
-        $this->_dsn = $dsn;
-        $this->_user = $username;
+        $this->__dsn = $dsn;
+        $this->__user = $username;
 
         // Create local query/transaction logger.
         $this->_log = PDOLog::create("$id/$dsn/$username");
@@ -66,10 +51,24 @@ class PDO extends PDO_original {
             case 3:  parent::__construct($dsn, $username, $password); break;
             default: parent::__construct($dsn, $username, $password, $options); break;
         }
-        
-        self::$instances[] = $this;
     }
-
+    
+    /**
+     * @deprecated
+     */
+    public function __setGodlikeTimestamp(): void {
+        $t = $_SERVER['GODLIKE_TIMESTAMP'] ?? null;
+        if ($t === self::$__timestamp) return;
+        self::$__timestamp = $t;
+        
+        $timestamp = 0;
+        if (self::$__timestamp !== null) {
+            $timestamp = \bcdiv(self::$__timestamp, '1000000', 6);
+        }
+    
+        parent::exec('SET timestamp = ' . $timestamp);
+    }
+    
     /**
      * @return bool
      */
@@ -124,6 +123,7 @@ class PDO extends PDO_original {
      * @return int
      */
     public function exec($statement): int {
+        $this->__setGodlikeTimestamp();
         $this->_log->queryStart($statement, [], false);
 
         try {
@@ -146,6 +146,8 @@ class PDO extends PDO_original {
      * @return PDOStatement
      */
     public function query($statement, $mode = PDO::FETCH_ASSOC, $arg3 = null, $arg4 = null): PDOStatement {
+        /** @noinspection PhpDeprecationInspection */
+        $this->__setGodlikeTimestamp();
         $this->_log->queryStart($statement, [], false);
 
         try {
@@ -159,7 +161,7 @@ class PDO extends PDO_original {
         $this->_log->queryEnd($error);
         if ($error) throw $error;
 
-        return (isset($result) && $result) ? PDOStatement::decorate($result, $this->_log) : null;
+        return (isset($result) && $result) ? PDOStatement::decorate($result, $this, $this->_log) : null;
     }
     
     /**
@@ -176,21 +178,21 @@ class PDO extends PDO_original {
         if ($options === null) $result = parent::prepare($statement);
         else $result = parent::prepare($statement, $options);
 
-        return (isset($result) && $result) ? PDOStatement::decorate($result, $this->_log) : null;
+        return (isset($result) && $result) ? PDOStatement::decorate($result, $this, $this->_log) : null;
     }
     
     /**
      * @return string
      */
     public function getDsn(): string {
-        return $this->_dsn;
+        return $this->__dsn;
     }
     
     /**
      * @return string
      */
     public function getUser(): string {
-        return $this->_user;
+        return $this->__user;
     }
 
     /**

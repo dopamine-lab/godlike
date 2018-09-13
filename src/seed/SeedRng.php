@@ -28,16 +28,17 @@ class SeedRng implements \JsonSerializable {
      * @return SeedRng
      */
     public static function create(?int $seed = null): SeedRng {
-        return new SeedRng(['seed' => $seed, 'count' => 0]);
+        return new SeedRng(['seed' => $seed, 'count' => 0], true);
     }
-
+    
     /**
      * @param array $data
+     * @param bool  $new
      */
-    private function __construct(array $data) {
+    private function __construct(array $data, bool $new = false) {
         $this->seed = $data['seed'] ?? null;
         $this->count = $data['count'] ?? 0;
-        $this->changed = false;
+        $this->changed = $new;
     }
 
     /**

@@ -7,67 +7,59 @@
 //
 // Standard time/date methods overridden to make them seedable.
 
-class FakeTime {
-    /** @var int */
-    private static $seconds;
-    
-    /** @var int */
-    private static $milliseconds;
-    
-    /** @var int */
-    private static $microseconds;
-    
-    /**
-     * @param int  $microseconds
-     * @param bool $requestTime
-     */
-    public static function set(int $microseconds, bool $requestTime = true): void {
-        self::$microseconds = $microseconds;
-        self::$milliseconds = (int) bcdiv($microseconds, '1000', 0);
-        self::$seconds = (int) bcdiv($microseconds, '1000000', 0);
-        
-        if ($requestTime) $_SERVER['REQUEST_TIME'] = self::$seconds;
+function __godlike_timestamp_cache(bool $real = false) {
+    if ($real) {
+        $e = getenv('FAKETIME_REALTIME');
+        if (is_string($e) && is_numeric($e) && strlen($e) > 0) $micro = $e;
+        else $micro = microtime_original(true) * 1000000;
+    } else {
+        if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return null;
+        $micro = $_SERVER['GODLIKE_TIMESTAMP'];
     }
     
-    public static function get(int $type = 0): int {
-        if ($type === 2) return self::$microseconds;
-        if ($type === 1) return self::$milliseconds;
-        return self::$seconds;
+    if (!$real && isset($_SERVER['GODLIKE_TIMESTAMP_CACHE']) && $_SERVER['GODLIKE_TIMESTAMP_CACHE'][0] === $micro) {
+        return $_SERVER['GODLIKE_TIMESTAMP_CACHE'];
     }
+    
+    $milli = (int) \bcdiv($micro, '1000', 0);
+    [$s, $u] = explode('.', \bcdiv($micro, '1000000', 6));
+    [$z, $i] = explode('|', date('Z|I', (int) $s));
+    
+    $result = [$micro, $milli, (int) $s, (int) ltrim($u, '0'), -1 * (int) $z, (int) $i];
+    if (!$real) $_SERVER['GODLIKE_TIMESTAMP_CACHE'] = $result;
+    
+    return $result;
 }
 
-if (function_exists('time')) return;
+//
 
+if (function_exists('time') || !function_exists('time_original')) return;
 
-function time() {
-    return FakeTime::get();
-}
+//
 
 function microtime($float = false) {
-    $s = FakeTime::get();
-    $t = FakeTime::get(2);
-    $us = (string) ($t - $s * 1000000);
-    $us = str_pad($us, 6, '0', STR_PAD_LEFT);
+    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return microtime_original($float);
+    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'] / 1000000, 4);
     
-    if ($float) return (float) ($s . '.' . substr($us, -4));
-    return '0.' . $us . '00 ' . $s;
+    /** @noinspection PhpUnusedLocalVariableInspection */
+    [$a, $b, $s, $u] = __godlike_timestamp_cache();
     
+    return '0.' . $u . '00 ' . $s;
 }
 
 function gettimeofday($float = false) {
-    $s = FakeTime::get();
-    $t = FakeTime::get(2);
-    $us = (string) ($t - $s * 1000000);
-    $us = str_pad($us, 6, '0', STR_PAD_LEFT);
+    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return gettimeofday_original($float);
+    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'] / 1000000, 5);
     
-    if ($float) return (float) ($s . '.' . substr($us, -5));
+    /** @noinspection PhpUnusedLocalVariableInspection */
+    [$a, $b, $s, $u, $z, $i] = __godlike_timestamp_cache();
     
-    return [
-        'sec' => $s,
-        'usec' => $t - $s * 1000000,
-        'minuteswest' => (int) (date('Z', $t) / 60),
-        'dsttime' => (bool) (int) date('I', $t)
-    ];
+    return ['sec' => $s, 'usec' => $u, 'minuteswest' => (int) ($z / 60), 'dsttime' => $i];
+}
+
+function time() {
+    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return time_original();
+    return __godlike_timestamp_cache()[1];
 }
 
 function mktime($hour = null, $minute = null, $second = null, $month = null, $day = null, $year = null) {
@@ -95,7 +87,7 @@ function date_create_immutable_from_format($f, $t, DateTimeZone $zone = null) {r
 
 
 class DateTime extends DateTime_original {
-    public static function createFromFormat($f, $t = 'now', ?DateTimeZone $zone = null) {
+    public static function createFromFormat($f, $t = 'now', $zone = null) {
         $date = parent::createFromFormat($f, $t, $zone);
         
         if ($t === null || $t === 'now' || $t === 'NOW') {
@@ -106,7 +98,7 @@ class DateTime extends DateTime_original {
         return $date;
     }
     
-    public function __construct($t = 'now', ?DateTimeZone $zone = null) {
+    public function __construct($t = 'now', $zone = null) {
         parent::__construct($t, $zone);
         
         if ($t === null || $t === 'now' || $t === 'NOW') {
@@ -117,11 +109,11 @@ class DateTime extends DateTime_original {
 }
 
 class DateTimeImmutable extends DateTimeImmutable_original {
-    public static function createFromFormat($f, $t = 'now', ?DateTimeZone $zone = null) {
+    public static function createFromFormat($f, $t = 'now', $zone = null) {
         return parent::createFromMutable(DateTime::createFromFormat($f, $t, $zone));
     }
     
-    public function __construct($t = 'now', ?DateTimeZone $zone = null) {
+    public function __construct($t = 'now', $zone = null) {
         if ($t === 'now' || $t === 'NOW' || $t === null) {
             $date = new DateTime($t, $zone);
             parent::__construct($date->format('Y-m-d H:i:s'), $zone);

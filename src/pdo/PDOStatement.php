@@ -15,31 +15,36 @@ class PDOStatement {
     public $queryString;
 
     /** @var \PDOStatement|PDOStatement_original */
-    private $_stmt;
+    private $__stmt;
+
+    /** @var PDO */
+    private $__pdo;
 
     /** @var PDOLog */
-    private $_log;
+    private $__log;
 
     /** @var string */
-    private $_query;
-
+    private $__query;
+    
     /**
      * @param PDOStatement|PDOStatement_original|mixed $stmt
+     * @param PDO $pdo
      * @param PDOLog $log
      *
      * @return PDOStatement
      */
-    public static function decorate($stmt, PDOLog $log): PDOStatement {
+    public static function decorate($stmt, PDO $pdo, PDOLog $log): PDOStatement {
         if (!$stmt) return $stmt; // Skip null statements to avoid null checks everywhere decorate is used.
         if (!($stmt instanceof PDOStatement_original)) {
             throw new \InvalidArgumentException('PDOStatement::decorate expects original PDOStatement instance.');
         }
 
         $decorator = new PDOStatement();
-        $decorator->_stmt = $stmt;
-        $decorator->_log = $log;
-        $decorator->_query = $stmt->queryString;
-        $decorator->queryString = $decorator->_query;
+        $decorator->__pdo = $pdo;
+        $decorator->__stmt = $stmt;
+        $decorator->__log = $log;
+        $decorator->__query = $stmt->queryString;
+        $decorator->queryString = $decorator->__query;
 
         return $decorator;
     }
@@ -63,9 +68,9 @@ class PDOStatement {
      */
     public function setFetchMode($mode, $classNameObject = null, $ctorarfg = null): bool {
         switch (func_num_args()) {
-            case 1:  return $this->_stmt->setFetchMode($mode);
-            case 2:  return $this->_stmt->setFetchMode($mode, $classNameObject);
-            default: return $this->_stmt->setFetchMode($mode, $classNameObject, $ctorarfg);
+            case 1:  return $this->__stmt->setFetchMode($mode);
+            case 2:  return $this->__stmt->setFetchMode($mode, $classNameObject);
+            default: return $this->__stmt->setFetchMode($mode, $classNameObject, $ctorarfg);
         }
     }
 
@@ -76,7 +81,7 @@ class PDOStatement {
      * @return bool
      */
     public function setAttribute($attribute, $value): bool {
-        return $this->_stmt->setAttribute($attribute, $value);
+        return $this->__stmt->setAttribute($attribute, $value);
     }
 
     /**
@@ -85,7 +90,7 @@ class PDOStatement {
      * @return mixed
      */
     public function getAttribute($attribute) {
-        return $this->_stmt->getAttribute($attribute);
+        return $this->__stmt->getAttribute($attribute);
     }
 
 
@@ -95,15 +100,17 @@ class PDOStatement {
      * @return bool
      */
     public function execute($params = null): bool {
-        $this->_log->queryStart($this->_query, $params ?? [], true);
+        /** @noinspection PhpDeprecationInspection */
+        $this->__pdo->__setGodlikeTimestamp();
+        $this->__log->queryStart($this->__query, $params ?? [], true);
 
         try {
-            if (func_num_args() === 1) $result = $this->_stmt->execute($params);
-            else $result = $this->_stmt->execute();
+            if (func_num_args() === 1) $result = $this->__stmt->execute($params);
+            else $result = $this->__stmt->execute();
         } catch (\Throwable $e) {}
 
         $error = $e ?? null;
-        $this->_log->queryEnd($error);
+        $this->__log->queryEnd($error);
         if ($error) throw $error;
 
         return $result ?? false;
@@ -120,10 +127,10 @@ class PDOStatement {
      */
     public function bindParam($parameter, &$variable, $data_type = PDO::PARAM_STR, $length = null, $driver_options = null): bool {
         switch (func_num_args()) {
-            case 2:  return $this->_stmt->bindParam($parameter, $variable);
-            case 3:  return $this->_stmt->bindParam($parameter, $variable, $data_type);
-            case 4:  return $this->_stmt->bindParam($parameter, $variable, $data_type, $length);
-            default: return $this->_stmt->bindParam($parameter, $variable, $data_type, $length, $driver_options);
+            case 2:  return $this->__stmt->bindParam($parameter, $variable);
+            case 3:  return $this->__stmt->bindParam($parameter, $variable, $data_type);
+            case 4:  return $this->__stmt->bindParam($parameter, $variable, $data_type, $length);
+            default: return $this->__stmt->bindParam($parameter, $variable, $data_type, $length, $driver_options);
         }
     }
 
@@ -137,8 +144,8 @@ class PDOStatement {
     public function bindValue($parameter, $value, $data_type = PDO::PARAM_STR): bool {
         /** @noinspection DegradedSwitchInspection */
         switch (func_num_args()) {
-            case 2:  return $this->_stmt->bindValue($parameter, $value);
-            default: return $this->_stmt->bindValue($parameter, $value, $data_type);
+            case 2:  return $this->__stmt->bindValue($parameter, $value);
+            default: return $this->__stmt->bindValue($parameter, $value, $data_type);
         }
     }
 
@@ -153,10 +160,10 @@ class PDOStatement {
      */
     public function bindColumn($column, &$param, $type = null, $maxlen = null, $driverdata = null): bool {
         switch (func_num_args()) {
-            case 2:  return $this->_stmt->bindColumn($column, $param);
-            case 3:  return $this->_stmt->bindColumn($column, $param, $type);
-            case 4:  return $this->_stmt->bindColumn($column, $param, $type, $maxlen);
-            default: return $this->_stmt->bindColumn($column, $param, $type, $maxlen, $driverdata);
+            case 2:  return $this->__stmt->bindColumn($column, $param);
+            case 3:  return $this->__stmt->bindColumn($column, $param, $type);
+            case 4:  return $this->__stmt->bindColumn($column, $param, $type, $maxlen);
+            default: return $this->__stmt->bindColumn($column, $param, $type, $maxlen, $driverdata);
         }
     }
 
@@ -169,10 +176,10 @@ class PDOStatement {
      */
     public function fetch($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
         switch (func_num_args()) {
-            case 0:  return $this->_stmt->fetch();
-            case 1:  return $this->_stmt->fetch($fetch_style);
-            case 2:  return $this->_stmt->fetch($fetch_style, $cursor_orientation);
-            default: return $this->_stmt->fetch($fetch_style, $cursor_orientation, $cursor_offset);
+            case 0:  return $this->__stmt->fetch();
+            case 1:  return $this->__stmt->fetch($fetch_style);
+            case 2:  return $this->__stmt->fetch($fetch_style, $cursor_orientation);
+            default: return $this->__stmt->fetch($fetch_style, $cursor_orientation, $cursor_offset);
         }
     }
 
@@ -182,7 +189,7 @@ class PDOStatement {
      * @return mixed
      */
     public function fetchColumn($column_number = 0) {
-        return $this->_stmt->fetchColumn($column_number);
+        return $this->__stmt->fetchColumn($column_number);
     }
 
     /**
@@ -194,10 +201,10 @@ class PDOStatement {
      */
     public function fetchAll($fetch_style = null, $fetch_argument = null, $ctor_args = null): array {
         switch (func_num_args()) {
-            case 0:  return $this->_stmt->fetchAll();
-            case 1:  return $this->_stmt->fetchAll($fetch_style);
-            case 2:  return $this->_stmt->fetchAll($fetch_style, $fetch_argument);
-            default: return $this->_stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
+            case 0:  return $this->__stmt->fetchAll();
+            case 1:  return $this->__stmt->fetchAll($fetch_style);
+            case 2:  return $this->__stmt->fetchAll($fetch_style, $fetch_argument);
+            default: return $this->__stmt->fetchAll($fetch_style, $fetch_argument, $ctor_args);
         }
     }
 
@@ -209,9 +216,9 @@ class PDOStatement {
      */
     public function fetchObject($class_name = null, $ctor_args = null) {
         switch (func_num_args()) {
-            case 0:  return $this->_stmt->fetchObject();
-            case 1:  return $this->_stmt->fetchObject($class_name);
-            default: return $this->_stmt->fetchObject($class_name, $ctor_args);
+            case 0:  return $this->__stmt->fetchObject();
+            case 1:  return $this->__stmt->fetchObject($class_name);
+            default: return $this->__stmt->fetchObject($class_name, $ctor_args);
         }
     }
 
@@ -219,14 +226,14 @@ class PDOStatement {
      * @return int
      */
     public function rowCount(): int {
-        return $this->_stmt->rowCount();
+        return $this->__stmt->rowCount();
     }
 
     /**
      * @return int
      */
     public function columnCount(): int {
-        return $this->_stmt->columnCount();
+        return $this->__stmt->columnCount();
     }
 
     /**
@@ -235,41 +242,41 @@ class PDOStatement {
      * @return array
      */
     public function getColumnMeta($column): array {
-        return $this->_stmt->getColumnMeta($column);
+        return $this->__stmt->getColumnMeta($column);
     }
 
     /**
      * @return bool
      */
     public function nextRowset(): bool {
-        return $this->_stmt->nextRowset();
+        return $this->__stmt->nextRowset();
     }
 
     /**
      * @return bool
      */
     public function closeCursor(): bool {
-        return $this->_stmt->closeCursor();
+        return $this->__stmt->closeCursor();
     }
 
     /**
      * @return string
      */
     public function errorCode(): string {
-        return $this->_stmt->errorCode();
+        return $this->__stmt->errorCode();
     }
 
     /**
      * @return array
      */
     public function errorInfo(): array {
-        return $this->_stmt->errorInfo();
+        return $this->__stmt->errorInfo();
     }
 
     /**
      * @return bool
      */
     public function debugDumpParams(): bool {
-        return $this->_stmt->debugDumpParams();
+        return $this->__stmt->debugDumpParams();
     }
 }

@@ -48,75 +48,80 @@ class SeedTime implements \JsonSerializable {
         }
         if ($stepMin > $stepMax) throw new \Exception('Min step is bigger than max step.');
 
+        // Convert milliseconds to microseconds.
+        if ($timestamp !== null) $timestamp *= 1000;
+        if ($stepMin !== null) $stepMin *= 1000;
+        if ($stepMax !== null) $stepMax *= 1000;
+        
         return new SeedTime([
             'timestamp' => $timestamp,
             'scale'     => $scale,
             'stepMin'   => $stepMin,
             'stepMax'   => $stepMax,
-            'lastHit'   => self::now()
-        ]);
-    }
-
-    /**
-     * @return int
-     */
-    private static function now(): int {
-        return (int) floor(microtime(true) * 1000);
+            'lastHit'   => null
+        ], true);
     }
 
     /**
      * @param array $data
+     * @param bool  $new
      */
-    private function __construct(array $data) {
+    private function __construct(array $data, bool $new = false) {
         $this->timestamp = $data['timestamp'];
         $this->scale = $data['scale'];
         $this->stepMin = $data['stepMin'];
         $this->stepMax = $data['stepMax'];
         $this->lastHit = $data['lastHit'];
-        $this->changed = false;
+        $this->changed = $new;
 
-        // IMPORTANT: mysqld does not support lower than 1000 as timestamp.
-        if ($this->timestamp < 10000) $this->timestamp = 10000;
+        // IMPORTANT: MySQL does not support 0 time - will be taken for unset timestamp.
+        if ($this->timestamp !== null && $this->timestamp <= 0) $this->timestamp = 1;
     }
-
+    
     /**
+     * @param int $now
+     *
      * @return SeedTime
      */
-    public function increment(): SeedTime {
+    public function increment(int $now): SeedTime {
+        $lastHit = $this->lastHit ?? $now;
         $timestamp = $this->timestamp;
 
         if ($this->scale !== null) {
-            $timestamp = $this->timestamp ?? $this->lastHit;
-            $timestamp += (int) round((self::now() - $this->lastHit) * $this->scale);
+            $timestamp = $this->timestamp ?? $lastHit;
+            $timestamp += (int) round(($now - $lastHit) * $this->scale);
         }
 
         if ($this->stepMin !== null && $this->stepMax !== null) {
-            $timestamp = $this->timestamp ?? self::now();
+            $timestamp = $this->timestamp ?? $now;
             /** @noinspection RandomApiMigrationInspection */
             $timestamp += $this->stepMin === $this->stepMax ? $this->stepMin : \mt_rand($this->stepMin, $this->stepMax);
         }
 
         $this->timestamp = $timestamp;
-        $this->lastHit = self::now();
+        $this->lastHit = $now;
         $this->changed = true;
         
         return $this;
     }
     
     /**
-     * @param bool $pdo
-     * @param bool $libfaketime
-     * @param string $pidFile
+     * @param bool   $pdo
+     * @param bool   $libfaketime
+     * @param string $libfaketimePidFile
      *
      * @return SeedTime
      */
-    public function apply(bool $pdo = false, bool $libfaketime = false, ?string $pidFile = null): SeedTime {
+    public function apply(bool $libfaketime = false, ?string $libfaketimePidFile = null): SeedTime {
         if ($this->timestamp === null) {
+            // Regular php seed.
+            $_SERVER['GODLIKE_TIMESTAMP'] = null;
+            
             if ($libfaketime) {
                 @unlink('/etc/faketimerc');
     
-                if ($pidFile !== null) {
-                    $pids = file_get_contents($pidFile);
+                if ($libfaketimePidFile !== null) {
+                    $pids = file_get_contents($libfaketimePidFile);
                     foreach ($pids as $pid) posix_kill($pid, 30);
                 }
             }
@@ -124,8 +129,7 @@ class SeedTime implements \JsonSerializable {
             return $this;
         }
         
-        [$s, $us] = explode('.', \bcdiv((string) $this->timestamp, '1000', 6));
-        
+        [$s, $us] = explode('.', \bcdiv((string) $this->timestamp, '1000000', 6));
         $s = (int) ltrim($s, '0');
         $us = (int) ltrim($us, '0');
     
@@ -133,17 +137,7 @@ class SeedTime implements \JsonSerializable {
         if ($s < 0) throw new \InvalidArgumentException('Time seed can be min: ' . date('Y-m-d H:i:s', 0));
     
         // Regular php seed.
-        if (class_exists('FakeTime')) \FakeTime::set($this->timestamp * 1000);
-        
-        if ($pdo) {
-            /** @noinspection PhpUndefinedClassInspection */
-            if (!method_exists(\PDO::class, 'setTimestamp')) {
-                throw new \LogicException('PDO class is not overridden by Godlike.');
-            }
-            
-            /** @noinspection PhpUndefinedClassInspection */
-            \PDO::setTimestamp($this->timestamp * 1000);
-        }
+        $_SERVER['GODLIKE_TIMESTAMP'] = $this->timestamp;
     
         if ($libfaketime) {
             $fp = fopen('/etc/faketimerc', 'r' . 'w+');
@@ -154,8 +148,8 @@ class SeedTime implements \JsonSerializable {
             fwrite($fp, date('Y-m-d H:i:s', $s) . '|' . $us . "\n");
             fflush($fp); flock($fp, LOCK_UN); fclose($fp);
     
-            if ($pidFile !== null) {
-                $pids = file_get_contents($pidFile);
+            if ($libfaketimePidFile !== null) {
+                $pids = file_get_contents($libfaketimePidFile);
                 foreach ($pids as $pid) posix_kill($pid, 30);
             }
         }

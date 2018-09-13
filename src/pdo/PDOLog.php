@@ -105,14 +105,7 @@ class PDOLog {
      * @return int
      */
     private static function time(): int {
-        /** @noinspection UnnecessaryCastingInspection */
-        $t = (int) (microtime(true) * 1000000);
-        $e = getenv('FAKETIME_REALTIME');
-
-        // If env var is empty or wrong format, maybe there is only realtime anyway.
-        if (!is_numeric($e)) $e = $t;
-
-        return (int) $e;
+        return __godlike_timestamp_cache(true)[0];
     }
     
     //
@@ -254,7 +247,7 @@ class PDOLog {
 
         // Count global stats.
         self::$queriesCount ++;
-        self::$queriesCount += $query['time'];
+        self::$queriesTime += $query['time'];
 
         // Finally, reset.
         $this->qId = null;
