@@ -224,7 +224,21 @@ class PDOLog {
             'timeStart' => self::time(),
             'timeEnd' => null,
             'time' => null,
+            'count' => 1
         ];
+        $currentParams = $params;
+        usort($currentParams, function($a, $b) {return (string) $a <=> (string) $b;});
+        $currentParamsStr = json_encode($currentParams);
+
+        foreach (self::$queries as $id => $q) {
+            if (trim($q['query']) === trim($statement)) {
+                usort($q['params'], function($a, $b) {return (string) $a <=> (string) $b;});
+                if ($id !== $this->qId && $currentParamsStr === json_encode($q['params'])) {
+                    self::$queries[$this->qId]['count']++;
+                    self::$queries[$id]['count']++;
+                }
+            }
+        }
 
         // If the query is in transaction we need to do some work afterwards to set the commit and transaction property.
         if ($this->tId) self::$transactions[$this->tId]['queries'][] = $this->qId;

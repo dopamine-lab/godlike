@@ -275,6 +275,7 @@ final class Godlike {
                     $text .= '        ' . PHP_EOL;
                     $text .= '        Params: ' . json_encode($q['params']) . PHP_EOL;
                     $text .= '        Time:   ' . $q['time'] . ' us' . PHP_EOL;
+                    $text .= '        Count:   ' . $q['count'] . PHP_EOL;
                     $text .= '        ' . str_repeat('_', 70) . PHP_EOL;
                 }
 
