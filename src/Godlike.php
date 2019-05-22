@@ -225,8 +225,6 @@ final class Godlike {
             // This only applies to HTTP api, CLI works as usual.
             ob_start();
         }
-        
-        if ($this->logEnabled) $this->log->text("\n");
     }
 
     /**
@@ -246,18 +244,46 @@ final class Godlike {
         $this->info['transactions']['duration'] = \PDOLog::getTransactionsTime();
         
         // Log to file.
-        if ($this->logEnabled) {
-            $this->log->text('');
-            
-            if ($this->statsEnabled) {
-                $this->log->header('Stats:', Log::HEADER_M);
-                if ($this->statsDuration)     $this->log->text("Duration: {$this->info['request']['duration']} us");
-                if ($this->statsQueries)      $this->log->text("Queries: {$this->info['queries']['count']} / {$this->info['queries']['duration']} us");
-                if ($this->statsTransactions) $this->log->text("Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['duration']} us");
+        if ($this->logEnabled && $this->statsEnabled) {
+            $this->log->header('Stats:', Log::HEADER_M);
+            if ($this->statsDuration)     $this->log->text("Duration: {$this->info['request']['duration']} us");
+            if ($this->statsQueries)      {
+                $text = 'Queries: ' . PHP_EOL
+                    . '    Total:' . PHP_EOL
+                    . '        Count: ' . $this->info['queries']['count'] . PHP_EOL
+                    . '        Duration: ' . $this->info['queries']['duration'] . PHP_EOL
+                    . '    List: ' . PHP_EOL;
+
+                foreach ($this->info['queries']['list'] as $q) {
+                    $text .= '        ```' . PHP_EOL;
+                    $lines = [];
+                    $minPadding = -1;
+                    foreach (explode(PHP_EOL, $q['query']) as $line) {
+                        if (trim($line) === '') continue;
+                        preg_match('/^( +?)[^ ]/', $line, $matches);
+                        $spaces = isset($matches[1]) ? strlen($matches[1]) : 0;
+
+                        if ($spaces < $minPadding || $minPadding === -1) $minPadding = $spaces;
+                        $lines[] = $line;
+                    }
+                    if ($minPadding < 0) $minPadding = 0;
+
+                    foreach ($lines as $line) {
+                        $text .= '          ' . substr($line, $minPadding) . PHP_EOL;
+                    }
+
+                    $text .= '        ' . PHP_EOL;
+                    $text .= '        Params: ' . json_encode($q['params']) . PHP_EOL;
+                    $text .= '        Time:   ' . $q['time'] . ' us' . PHP_EOL;
+                    $text .= '        ' . str_repeat('_', 70) . PHP_EOL;
+                }
+
+                $this->log->text(rtrim($text));
             }
+
+            if ($this->statsTransactions) $this->log->text("Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['duration']} us");
         }
     
-        // TODO: log queries
         // TODO: seed time for pdo
 
         // Set HTTP headers.
