@@ -260,7 +260,7 @@ final class Godlike {
                     $minPadding = -1;
                     foreach (explode(PHP_EOL, $q['query']) as $line) {
                         if (trim($line) === '') continue;
-                        preg_match('/^( +?)[^ ]/', $line, $matches);
+                        preg_match('/^([\s]+?)\S/', $line, $matches);
                         $spaces = isset($matches[1]) ? strlen($matches[1]) : 0;
 
                         if ($spaces < $minPadding || $minPadding === -1) $minPadding = $spaces;
