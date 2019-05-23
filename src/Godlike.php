@@ -11,6 +11,7 @@ require_once __DIR__ . '/common/Process.php';
 require_once __DIR__ . '/common/Storage.php';
 require_once __DIR__ . '/debug/Logger.php';
 require_once __DIR__ . '/debug/Timer.php';
+require_once __DIR__ . '/debug/Snitch.php';
 require_once __DIR__ . '/seed/Seeder.php';
 
 
@@ -24,15 +25,15 @@ final class Godlike {
     public static function enchant(): void {
         // Allow disable prepend or seed for the request.
         if (isset($_SERVER['HTTP_GODLIKE_NO_PREPEND']) && $_SERVER['HTTP_GODLIKE_NO_PREPEND']) return;
-        if (isset($_SERVER['HTTP_GODLIKE_NO_SEED']) && $_SERVER['HTTP_GODLIKE_SKIP_SEED']) return;
-        if (isset($_SERVER['HTTP_GODLIKE_NO_LOG']) && $_SERVER['HTTP_GODLIKE_SKIP_LOG']) return;
+        if (isset($_SERVER['HTTP_GODLIKE_NO_SEED']) && $_SERVER['HTTP_GODLIKE_NO_SEED']) return;
+        if (isset($_SERVER['HTTP_GODLIKE_NO_LOG']) && $_SERVER['HTTP_GODLIKE_NO_LOG']) return;
         
         self::$instance = new Godlike();
         self::$instance->prepend([
             'name' => self::string($_SERVER['HTTP_GODLIKE_REQUEST_NAME'] ?? null),
             'tags' => self::string($_SERVER['HTTP_GODLIKE_REQUEST_TAGS'] ?? null),
             'rng' => self::int($_SERVER['HTTP_GODLIKE_SEED_RNG'] ?? null),
-            'time' => self::int($_SERVER['HTTP_GODLIKE_SEED_TIME'] ?? null),
+            'time' => self::int($_SERVER['HTTP_GODLIKE_SEED_TIME'] ?? null) ?: null,
         ]);
     }
     
@@ -44,12 +45,12 @@ final class Godlike {
             self::$instance = new Godlike();
         }
     
-        $cmd = self::int($_REQUEST['cmd'] ?? '');
+        $cmd = self::string($_REQUEST['cmd'] ?? '');
         $params = [];
     
         if ($cmd === 'seed') {
             $params['rng'] = self::int($_REQUEST['rng'] ?? null);
-            $params['time'] = self::int($_REQUEST['time'] ?? null);
+            $params['time'] = self::int($_REQUEST['time'] ?? null) ?: null;
             $params['timeScale'] = self::float($_REQUEST['timeScale'] ?? null);
             $params['timeStepMin'] = self::int($_REQUEST['timeStepMin'] ?? null);
             $params['timeStepMax'] = self::int($_REQUEST['timeStepMax'] ?? null);
@@ -317,7 +318,7 @@ final class Godlike {
     private function command(string $cmd, array $params = []) {
         // Call init first in case we have not added the prepend script yet.
         $this->init();
-    
+     
         // Phpinfo request will exit.
         if ($cmd === 'phpinfo') {
             echo Snitch::phpinfo();

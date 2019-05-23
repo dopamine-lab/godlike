@@ -63,7 +63,7 @@ class PDO extends PDO_original {
         
         $timestamp = 0;
         if (self::$__timestamp !== null) {
-            $timestamp = \bcdiv(self::$__timestamp, '1000000', 6);
+            $timestamp = \bcdiv(self::$__timestamp, '1000', 6);
         }
     
         parent::exec('SET timestamp = ' . $timestamp);

@@ -11,7 +11,7 @@ function __godlike_timestamp_cache(bool $real = false) {
     if ($real) {
         $e = getenv('FAKETIME_REALTIME');
         if (is_string($e) && is_numeric($e) && strlen($e) > 0) $micro = $e;
-        else $micro = microtime_original(true) * 1000000;
+        else $micro = bcmul(microtime_original(true), 1000000);
     } else {
         if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return null;
         $micro = $_SERVER['GODLIKE_TIMESTAMP'];
