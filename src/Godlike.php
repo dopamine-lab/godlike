@@ -29,9 +29,10 @@ final class Godlike {
         if (isset($_SERVER['HTTP_GODLIKE_NO_LOG']) && $_SERVER['HTTP_GODLIKE_NO_LOG']) return;
         
         self::$instance = new Godlike();
+        $tags = self::string($_SERVER['HTTP_GODLIKE_REQUEST_TAGS'] ?? '');
         self::$instance->prepend([
             'name' => self::string($_SERVER['HTTP_GODLIKE_REQUEST_NAME'] ?? null),
-            'tags' => self::string($_SERVER['HTTP_GODLIKE_REQUEST_TAGS'] ?? null),
+            'tags' => preg_split('/\s*,\s*/', $tags, -1, PREG_SPLIT_NO_EMPTY),
             'rng' => self::int($_SERVER['HTTP_GODLIKE_SEED_RNG'] ?? null),
             'time' => self::int($_SERVER['HTTP_GODLIKE_SEED_TIME'] ?? null) ?: null,
         ]);

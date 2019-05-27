@@ -115,7 +115,7 @@ final class Process {
         }
         
         $id = $this->id;
-        if ($name && $this->name) $id .= " ($name)";
+        if ($name && $this->name) $id .= " ($this->name)";
         
         if (empty($full)) return $id;
         return $id . ' (' . implode(', ', $full) . ' )';
