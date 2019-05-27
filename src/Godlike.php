@@ -59,6 +59,10 @@ final class Godlike {
             $params['opcache'] = self::bool($_REQUEST['opcache'] ?? null);
             $params['pid'] = self::bool($_REQUEST['pid'] ?? null);
             $params['log'] = self::bool($_REQUEST['log'] ?? null);
+        } elseif ($cmd === 'config') {
+            $params = $_REQUEST ?? [];
+
+            unset($params['cmd']);
         }
     
         try {
@@ -119,11 +123,20 @@ final class Godlike {
     
     /** @var bool */
     private $statsTransactions;
+
+    /** @var string  */
+    private $configFile;
+
+    /** @var array */
+    private $_config;
     
     /**
      *
      */
-    private function __construct() {}
+    private function __construct() {
+        $this->configFile = dirname(__DIR__) . '/config.ini';
+        $this->_config = [];
+    }
 
     /**
      * @param string|null $name
@@ -132,20 +145,19 @@ final class Godlike {
     private function init(?string $name = null, array $tags = []): void {
         if ($this->process) return;
     
-        $config = [];
-        if (file_exists(dirname(__DIR__) . '/config.ini')) {
-            $config = parse_ini_file(dirname(__DIR__) . '/config.ini');
+        if (file_exists($this->configFile)) {
+            $this->_config = parse_ini_file($this->configFile) ?? [];
         }
     
-        $this->strictEnabled = self::bool($config['strict_enabled'] ?? true);
-        $this->strictForceDeclare = self::bool($config['strict_force_declare'] ?? true);
-        $this->headersEnabled = self::bool($config['headers_enabled'] ?? true);
-        $this->logEnabled = self::bool($config['log_enabled'] ?? true);
-        $this->logPath = self::string($config['log_path'] ?? null);
-        $this->statsEnabled = self::bool($config['stats_enabled'] ?? true);
-        $this->statsDuration = self::bool($config['stats_duration'] ?? true);
-        $this->statsQueries = self::bool($config['stats_queries'] ?? true);
-        $this->statsTransactions = self::bool($config['stats_transactions'] ?? true);
+        $this->strictEnabled = self::bool($this->_config['strict_enabled'] ?? true);
+        $this->strictForceDeclare = self::bool($this->_config['strict_force_declare'] ?? true);
+        $this->headersEnabled = self::bool($this->_config['headers_enabled'] ?? true);
+        $this->logEnabled = self::bool($this->_config['log_enabled'] ?? true);
+        $this->logPath = self::string($this->_config['log_path'] ?? null);
+        $this->statsEnabled = self::bool($this->_config['stats_enabled'] ?? true);
+        $this->statsDuration = self::bool($this->_config['stats_duration'] ?? true);
+        $this->statsQueries = self::bool($this->_config['stats_queries'] ?? true);
+        $this->statsTransactions = self::bool($this->_config['stats_transactions'] ?? true);
         
         //
 
@@ -351,6 +363,17 @@ final class Godlike {
             );
             
             return 'Environment seeded successfully.';
+        }
+
+        if ($cmd === 'config') {
+            $this->_config = array_merge($this->_config, $params);
+            $ini = '';
+
+            foreach ($this->_config as $k => $v) $ini .= "$k = $v\n";
+
+            file_put_contents($this->configFile, $ini);
+
+            return 'Environment configured successfully.';
         }
         
         return [
