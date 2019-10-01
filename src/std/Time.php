@@ -16,7 +16,7 @@ function __godlike_timestamp_cache(bool $real = false) {
         if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return null;
         $micro = $_SERVER['GODLIKE_TIMESTAMP'];
     }
-    
+
     if (!$real && isset($_SERVER['GODLIKE_TIMESTAMP_CACHE']) && $_SERVER['GODLIKE_TIMESTAMP_CACHE'][0] === $micro) {
         return $_SERVER['GODLIKE_TIMESTAMP_CACHE'];
     }
@@ -39,7 +39,7 @@ if (function_exists('time') || !function_exists('time_original')) return;
 
 function microtime($float = false) {
     if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return microtime_original($float);
-    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'] / 1000000, 4);
+    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'], 4);
     
     /** @noinspection PhpUnusedLocalVariableInspection */
     [$a, $b, $s, $u] = __godlike_timestamp_cache();
