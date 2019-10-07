@@ -52,9 +52,6 @@ function crypt($str, $salt = null) {
 }
 
 function password_hash($password, $algo = PASSWORD_BCRYPT, ?array $options = null) {
-    $options = $options ?? [];
-    $options['salt'] = $options['salt'] ?? '' ?: str_pad('s-' . mt_rand(1000000, 9999999), 22);
-    
     return \password_hash_original($password, $algo, $options ?? []);
 }
 
