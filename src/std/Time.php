@@ -117,6 +117,10 @@ class DateTimeImmutable extends DateTimeImmutable_original {
         if ($t === 'now' || $t === 'NOW' || $t === null) {
             $date = new DateTime($t, $zone);
             parent::__construct($date->format('Y-m-d H:i:s'), $zone);
+        } else if (substr($t, 0, 1) === '+' || substr($t, 0, 1) === '-') {
+            $date = new DateTime('now', $zone);
+            $date->setTimestamp(time() + explode(' ', $t)[0]);
+            parent::__construct($date->format('Y-m-d H:i:s'), $zone);
         } else {
             parent::__construct($t, $zone);
         }
