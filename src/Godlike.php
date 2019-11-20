@@ -25,8 +25,6 @@ final class Godlike {
     public static function enchant(): void {
         // Allow disable prepend or seed for the request.
         if (isset($_SERVER['HTTP_GODLIKE_NO_PREPEND']) && $_SERVER['HTTP_GODLIKE_NO_PREPEND']) return;
-        if (isset($_SERVER['HTTP_GODLIKE_NO_SEED']) && $_SERVER['HTTP_GODLIKE_NO_SEED']) return;
-        if (isset($_SERVER['HTTP_GODLIKE_NO_LOG']) && $_SERVER['HTTP_GODLIKE_NO_LOG']) return;
         
         self::$instance = new Godlike();
         $tags = self::string($_SERVER['HTTP_GODLIKE_REQUEST_TAGS'] ?? '');
@@ -35,6 +33,8 @@ final class Godlike {
             'tags' => preg_split('/\s*,\s*/', $tags, -1, PREG_SPLIT_NO_EMPTY),
             'rng' => self::int($_SERVER['HTTP_GODLIKE_SEED_RNG'] ?? null),
             'time' => self::int($_SERVER['HTTP_GODLIKE_SEED_TIME'] ?? null) ?: null,
+            'logEnabled' => !self::bool($_SERVER['HTTP_GODLIKE_NO_LOG'] ?? null),
+            'seedEnabled' => !self::bool($_SERVER['HTTP_GODLIKE_NO_SEED'] ?? null),
         ]);
     }
     
@@ -91,6 +91,9 @@ final class Godlike {
 
     /** @var Seeder */
     private $seeder;
+
+    /** @var bool */
+    private $seedEnabled;
     
     /** @var int */
     private $realtime;
@@ -149,7 +152,8 @@ final class Godlike {
         if (file_exists($this->configFile)) {
             $this->_config = parse_ini_file($this->configFile) ?? [];
         }
-    
+
+        $this->seedEnabled = true;
         $this->strictEnabled = self::bool($this->_config['strict_enabled'] ?? true);
         $this->strictForceDeclare = self::bool($this->_config['strict_force_declare'] ?? true);
         $this->headersEnabled = self::bool($this->_config['headers_enabled'] ?? true);
@@ -178,14 +182,20 @@ final class Godlike {
         // Call init to setup the whole request/process.
         $this->init($params['name'] ?? null, $params['tags'] ?? []);
 
+        // Enable or disable based on params from enchant
+        $this->logEnabled = $params['logEnabled'] ?? $this->logEnabled;
+        $this->seedEnabled = $params['seedEnabled'] ?? $this->seedEnabled;
+
         // Append file is not called if there is a fatal error, se we do it this way.
         register_shutdown_function(function () {
             $this->append();
         });
 
         // Execute the seeder (with temp seed if provided).
-        $this->seeder->exec($params['rng'] ?? null, $params['time'] ?? null);
-        
+        if (self::$instance->seedEnabled) {
+            $this->seeder->exec($params['rng'] ?? null, $params['time'] ?? null);
+        }
+
         // Collect startup info.
         $this->realtime = $this->clock->micro(true);
         $this->info = [
@@ -197,8 +207,8 @@ final class Godlike {
                 'duration' => 0,
             ],
             'seed'    => [
-                'rng'      => json_encode($this->seeder->getRng()),
-                'time'     => json_encode($this->seeder->getTime()),
+                'rng'      => self::$instance->seedEnabled ? json_encode($this->seeder->getRng()) : '',
+                'time'     => self::$instance->seedEnabled ? json_encode($this->seeder->getTime()) : '',
             ],
             'queries'      => ['list' => [], 'count' => 0, 'duration' => 0],
             'transactions' => ['list' => [], 'count' => 0, 'duration' => 0],
@@ -298,8 +308,6 @@ final class Godlike {
 
             if ($this->statsTransactions) $this->log->text("Transactions: {$this->info['transactions']['count']} / {$this->info['transactions']['duration']} us");
         }
-    
-        // TODO: seed time for pdo
 
         // Set HTTP headers.
         if (PHP_SAPI === 'cli') return;
