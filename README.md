@@ -23,8 +23,16 @@ Godlike also has the ability to seed the RNG and system time on linux if libfake
 
 ### Response headers
 
-If enabled, Godlike will add additional response headers, that could be useful for debug.
+If enabled, Godlike will add additional response headers, that could be useful for debug:
 
+| Header                    |  Description                                                                          |
+|---------------------------|---------------------------------------------------------------------------------------|
+| X-Godlike-R-Duration      |  Total duration of the request                                                        |
+| X-Godlike-R-Id            |  Request ID (process sequential number and name, if provided via GODLIKE-NAME header) |
+| X-Godlike-R-Queries       |  Total count and duration of all SQL queries executed in this request                 |
+| X-Godlike-R-Seed          |  RNG and time seeds used in this request                                              |
+| X-Godlike-R-Time          |  Server time & timestamp of this request                                              |
+| X-Godlike-R-Transactions  |  Number of SQL transactions and total time spent in transaction                       |
 
 ### Usage
 
@@ -72,7 +80,7 @@ Additionally API documentation can be found [here](https://documenter.getpostman
 ### Logging
 
 If logs are enabled in config.ini, Godlike will log:
- - Type of request (CLI/CGI) together with it's full ID (process id number and name, if provided via GODLIKE-NAME header).
+ - Type of request (CLI/CGI) together with it's full ID (process sequential number and name, if provided via GODLIKE-NAME header).
  - Current date and timestamp.
  - RNG seed - initial seed value and number of requests after initial seed.
  - Time seed - Initial timestamp, time scale, min and max time steps and real timestamp when last used.
