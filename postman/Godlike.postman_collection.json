@@ -1,0 +1,407 @@
+{
+	"info": {
+		"_postman_id": "a7b92116-3a10-4cce-b600-baf5bcdaa216",
+		"name": "Godlike",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Seed",
+			"item": [
+				{
+					"name": "Seed RNG",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=seed&rng=1",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "seed"
+								},
+								{
+									"key": "rng",
+									"value": "1"
+								}
+							]
+						},
+						"description": "Seed RNG in order to return same sequence of random numbers."
+					},
+					"response": []
+				},
+				{
+					"name": "Seed time with time scale",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=seed&time=1574173615&timeScale=2",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "seed"
+								},
+								{
+									"key": "time",
+									"value": "1574173615",
+									"description": "Starting timestamp"
+								},
+								{
+									"key": "timeScale",
+									"value": "2",
+									"description": "timeScale makes time run faster or slower"
+								}
+							]
+						},
+						"description": "Makes time run faster or slower"
+					},
+					"response": []
+				},
+				{
+					"name": "Seed time with time steps",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=seed&time=1574173615&timeStepMin=60&timeStepMax=60",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "seed"
+								},
+								{
+									"key": "time",
+									"value": "1574173615",
+									"description": "Starting timestamp"
+								},
+								{
+									"key": "timeStepMin",
+									"value": "60",
+									"description": "Minimum time in seconds"
+								},
+								{
+									"key": "timeStepMax",
+									"value": "60",
+									"description": "Maximum time in seconds"
+								}
+							]
+						},
+						"description": "Set initial timestamp and time step between every request."
+					},
+					"response": []
+				},
+				{
+					"name": "Seed RNG and time",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=seed&rng=1&time=1574173615&timeStepMin=60&timeStepMax=60",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "seed"
+								},
+								{
+									"key": "rng",
+									"value": "1"
+								},
+								{
+									"key": "time",
+									"value": "1574173615",
+									"description": "Starting timestamp"
+								},
+								{
+									"key": "timeStepMin",
+									"value": "60",
+									"description": "Minimum time in seconds"
+								},
+								{
+									"key": "timeStepMax",
+									"value": "60",
+									"description": "Maximum time in seconds"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"description": "All available seeding options",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "3ab4b7ca-ea4c-4e4a-95aa-cab1b6ee3476",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "11d3f416-0bf7-4305-a324-0cc50cbda5ee",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Reset",
+			"item": [
+				{
+					"name": "Seed",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=reset&seed=true",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "reset"
+								},
+								{
+									"key": "seed",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Discards all changes made with seed requests."
+					},
+					"response": []
+				},
+				{
+					"name": "OPchache",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=reset&opcache=true",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "reset"
+								},
+								{
+									"key": "opcache",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Reset OPcache."
+					},
+					"response": []
+				},
+				{
+					"name": "pid",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=reset&pid=true",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "reset"
+								},
+								{
+									"key": "pid",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Reset pid."
+					},
+					"response": []
+				},
+				{
+					"name": "Log",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=reset&pid=true",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "reset"
+								},
+								{
+									"key": "pid",
+									"value": "true"
+								}
+							]
+						},
+						"description": "Truncate log file."
+					},
+					"response": []
+				}
+			],
+			"description": "All available reset options. You can mix and match them as you see fit.",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"id": "ee4f89fa-0618-4102-91bd-7f10ce95a03f",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"id": "cb0cac31-14d1-4693-8f00-f3316b309402",
+						"type": "text/javascript",
+						"exec": [
+							""
+						]
+					}
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Config",
+			"item": [
+				{
+					"name": "Configure",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL_GODLIKE}}/api?cmd=config&strict_enabled=1&log_enabled=1&log_path=/var/log/godlike/requests.log",
+							"host": [
+								"{{URL_GODLIKE}}"
+							],
+							"path": [
+								"api"
+							],
+							"query": [
+								{
+									"key": "cmd",
+									"value": "config"
+								},
+								{
+									"key": "strict_enabled",
+									"value": "1"
+								},
+								{
+									"key": "log_enabled",
+									"value": "1"
+								},
+								{
+									"key": "log_path",
+									"value": "/var/log/godlike/requests.log"
+								}
+							]
+						},
+						"description": "Change php ini settings on the fly."
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "phpinfo",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL_GODLIKE}}/api?cmd=phpinfo",
+					"host": [
+						"{{URL_GODLIKE}}"
+					],
+					"path": [
+						"api"
+					],
+					"query": [
+						{
+							"key": "cmd",
+							"value": "phpinfo"
+						}
+					]
+				},
+				"description": "Renders phpinfo page"
+			},
+			"response": []
+		},
+		{
+			"name": "Configuration overview",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{URL_GODLIKE}}/api",
+					"host": [
+						"{{URL_GODLIKE}}"
+					],
+					"path": [
+						"api"
+					]
+				},
+				"description": "Returns configuration overview of:\n - RNG\n - Time\n - Environment\n - ini settings\n - enabled extensions"
+			},
+			"response": []
+		}
+	],
+	"protocolProfileBehavior": {}
+}

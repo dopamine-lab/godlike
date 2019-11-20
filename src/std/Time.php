@@ -33,96 +33,136 @@ function __godlike_timestamp_cache(bool $real = false) {
 
 //
 
-if (function_exists('time') || !function_exists('time_original')) return;
+if (!function_exists('time') && function_exists('time_original')) {
 
-//
+    //
 
-function microtime($float = false) {
-    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return microtime_original($float);
-    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'], 4);
-    
-    /** @noinspection PhpUnusedLocalVariableInspection */
-    [$a, $b, $s, $u] = __godlike_timestamp_cache();
-    
-    return '0.' . $u . '00 ' . $s;
-}
+    function microtime($float = false) {
+        if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return microtime_original($float);
+        if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'], 4);
 
-function gettimeofday($float = false) {
-    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return gettimeofday_original($float);
-    if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'] / 1000000, 5);
-    
-    /** @noinspection PhpUnusedLocalVariableInspection */
-    [$a, $b, $s, $u, $z, $i] = __godlike_timestamp_cache();
-    
-    return ['sec' => $s, 'usec' => $u, 'minuteswest' => (int) ($z / 60), 'dsttime' => $i];
-}
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$a, $b, $s, $u] = __godlike_timestamp_cache();
 
-function time() {
-    if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return time_original();
-    return __godlike_timestamp_cache()[1];
-}
+        return '0.' . $u . '00 ' . $s;
+    }
 
-function mktime($hour = null, $minute = null, $second = null, $month = null, $day = null, $year = null) {
-    return mktime($hour ?? gmdate('H'), $minute ?? gmdate('i'), $second ?? gmdate('s'), $month ?? gmdate('n'), $day ?? gmdate('j'), $year ?? gmdate('Y'));
-}
-function gmmktime($hour = null, $minute = null, $second = null, $month = null, $day = null, $year = null) {
-    return gmmktime($hour ?? gmdate('H'), $minute ?? gmdate('i'), $second ?? gmdate('s'), $month ?? gmdate('n'), $day ?? gmdate('j'), $year ?? gmdate('Y'));
-}
+    function gettimeofday($float = false) {
+        if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return gettimeofday_original($float);
+        if ($float) return round($_SERVER['GODLIKE_TIMESTAMP'] / 1000000, 5);
 
-function strtotime($s, $t = null) {return \strtotime_original($s, ($t === 'now' || $t === 'NOW' || $t === null) ? time() : $t);}
-function localtime($t = null, $assoc = null) {return \localtime_original($t ?? time(), $assoc);}
+        /** @noinspection PhpUnusedLocalVariableInspection */
+        [$a, $b, $s, $u, $z, $i] = __godlike_timestamp_cache();
 
-function date($f, $t = null) {return \date_original($f, $t ?? time());}
-function gmdate($f, $t = null) {return \gmdate_original($f, $t ?? time());}
-function idate($f, $t = null) {return \idate_original($f, $t ?? time());}
-function strftime($f, $t = null) {return \strftime_original($f, $t ?? time());}
-function gmstrftime($f, $t = null) {return \gmstrftime_original($f, $t ?? time());}
-function getdate($t = null) {return \getdate_original($t ?? time());}
-function unixtojd($t = null) {return \unixtojd_original($t ?? time());}
+        return ['sec' => $s, 'usec' => $u, 'minuteswest' => (int) ($z / 60), 'dsttime' => $i];
+    }
 
-function date_create($t = 'now', DateTimeZone $zone = null) {return new DateTime($t, $zone);}
-function date_create_from_format($f, $t, $zone = null) {return DateTime::createFromFormat($f, $t, $zone);}
-function date_create_immutable($t = 'now', DateTimeZone $zone = null) {return new DateTimeImmutable($t, $zone);}
-function date_create_immutable_from_format($f, $t, DateTimeZone $zone = null) {return DateTimeImmutable::createFromFormat($f, $t, $zone);}
+    function time() {
+        if (!isset($_SERVER['GODLIKE_TIMESTAMP'])) return time_original();
 
+        return __godlike_timestamp_cache()[1];
+    }
 
-class DateTime extends DateTime_original {
-    public static function createFromFormat($f, $t = 'now', $zone = null) {
-        $date = parent::createFromFormat($f, $t, $zone);
-        
-        if ($t === null || $t === 'now' || $t === 'NOW') {
-            /** @noinspection PhpUndefinedMethodInspection */
-            $date->setTimestamp(time());
+    function mktime($hour = null, $minute = null, $second = null, $month = null, $day = null, $year = null) {
+        return mktime($hour ?? gmdate('H'), $minute ?? gmdate('i'), $second ?? gmdate('s'), $month ?? gmdate('n'),
+            $day ?? gmdate('j'), $year ?? gmdate('Y'));
+    }
+
+    function gmmktime($hour = null, $minute = null, $second = null, $month = null, $day = null, $year = null) {
+        return gmmktime($hour ?? gmdate('H'), $minute ?? gmdate('i'), $second ?? gmdate('s'), $month ?? gmdate('n'),
+            $day ?? gmdate('j'), $year ?? gmdate('Y'));
+    }
+
+    function strtotime($s, $t = null) {
+        return \strtotime_original($s, ($t === 'now' || $t === 'NOW' || $t === null) ? time() : $t);
+    }
+
+    function localtime($t = null, $assoc = null) {
+        return \localtime_original($t ?? time(), $assoc);
+    }
+
+    function date($f, $t = null) {
+        return \date_original($f, $t ?? time());
+    }
+
+    function gmdate($f, $t = null) {
+        return \gmdate_original($f, $t ?? time());
+    }
+
+    function idate($f, $t = null) {
+        return \idate_original($f, $t ?? time());
+    }
+
+    function strftime($f, $t = null) {
+        return \strftime_original($f, $t ?? time());
+    }
+
+    function gmstrftime($f, $t = null) {
+        return \gmstrftime_original($f, $t ?? time());
+    }
+
+    function getdate($t = null) {
+        return \getdate_original($t ?? time());
+    }
+
+    function unixtojd($t = null) {
+        return \unixtojd_original($t ?? time());
+    }
+
+    function date_create($t = 'now', DateTimeZone $zone = null) {
+        return new DateTime($t, $zone);
+    }
+
+    function date_create_from_format($f, $t, $zone = null) {
+        return DateTime::createFromFormat($f, $t, $zone);
+    }
+
+    function date_create_immutable($t = 'now', DateTimeZone $zone = null) {
+        return new DateTimeImmutable($t, $zone);
+    }
+
+    function date_create_immutable_from_format($f, $t, DateTimeZone $zone = null) {
+        return DateTimeImmutable::createFromFormat($f, $t, $zone);
+    }
+
+    class DateTime extends DateTime_original {
+        public static function createFromFormat($f, $t = 'now', $zone = null) {
+            $date = parent::createFromFormat($f, $t, $zone);
+
+            if ($t === null || $t === 'now' || $t === 'NOW') {
+                /** @noinspection PhpUndefinedMethodInspection */
+                $date->setTimestamp(time());
+            }
+
+            return $date;
         }
-        
-        return $date;
-    }
-    
-    public function __construct($t = 'now', $zone = null) {
-        parent::__construct($t, $zone);
-        
-        if ($t === null || $t === 'now' || $t === 'NOW') {
-            /** @noinspection PhpUndefinedMethodInspection */
-            $this->setTimestamp(time());
-        }
-    }
-}
 
-class DateTimeImmutable extends DateTimeImmutable_original {
-    public static function createFromFormat($f, $t = 'now', $zone = null) {
-        return parent::createFromMutable(DateTime::createFromFormat($f, $t, $zone));
-    }
-    
-    public function __construct($t = 'now', $zone = null) {
-        if ($t === 'now' || $t === 'NOW' || $t === null) {
-            $date = new DateTime($t, $zone);
-            parent::__construct($date->format('Y-m-d H:i:s'), $zone);
-        } else if (substr($t, 0, 1) === '+' || substr($t, 0, 1) === '-') {
-            $date = new DateTime('now', $zone);
-            $date->setTimestamp(time() + explode(' ', $t)[0]);
-            parent::__construct($date->format('Y-m-d H:i:s'), $zone);
-        } else {
+        public function __construct($t = 'now', $zone = null) {
             parent::__construct($t, $zone);
+
+            if ($t === null || $t === 'now' || $t === 'NOW') {
+                /** @noinspection PhpUndefinedMethodInspection */
+                $this->setTimestamp(time());
+            }
+        }
+    }
+
+    class DateTimeImmutable extends DateTimeImmutable_original {
+        public static function createFromFormat($f, $t = 'now', $zone = null) {
+            return parent::createFromMutable(DateTime::createFromFormat($f, $t, $zone));
+        }
+
+        public function __construct($t = 'now', $zone = null) {
+            if ($t === 'now' || $t === 'NOW' || $t === null) {
+                $date = new DateTime($t, $zone);
+                parent::__construct($date->format('Y-m-d H:i:s'), $zone);
+            } elseif (substr($t, 0, 1) === '+' || substr($t, 0, 1) === '-') {
+                $date = new DateTime('now', $zone);
+                $date->setTimestamp(time() + explode(' ', $t)[0]);
+                parent::__construct($date->format('Y-m-d H:i:s'), $zone);
+            } else {
+                parent::__construct($t, $zone);
+            }
         }
     }
 }
