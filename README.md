@@ -3,7 +3,7 @@
 
 ---
 
-### Overview
+## Overview
 
 This is a collection of debug/help PHP classes,
 intended to be prepended on every CGI or CLI PHP script. 
@@ -21,7 +21,7 @@ Godlike also has the ability to seed the RNG and system time on linux if libfake
 - Transactions in SQL statements are not supported (START TRANSACTION). Use only PDO::beginTransaction and such.
 - Only EXCEPTION error mode is supported. Exception will be thrown otherwise.
 
-### Response headers
+## Response headers
 
 If enabled, Godlike will add additional response headers, that could be useful for debug:
 
@@ -34,7 +34,7 @@ If enabled, Godlike will add additional response headers, that could be useful f
 | X-Godlike-R-Time          |  Server time & timestamp of this request                                              |
 | X-Godlike-R-Transactions  |  Number of SQL transactions and total time spent in transaction                       |
 
-### Usage
+## Usage
 
 If you want to configure godlike, copy the config.tpl.ini to the same directory with the name `config.ini`.
 
@@ -77,7 +77,7 @@ Postman collection, containing all available api requests exists in `postman` di
 Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest)
 
 
-### Logging
+## Logging
 
 If logs are enabled in config.ini, Godlike will log:
  - Type of request (CLI/CGI) together with it's full ID (process sequential number and name, if provided via GODLIKE-NAME header).
@@ -126,3 +126,109 @@ Example log entry:
             Time:   415 us
             Count:   1
 ```
+
+
+## Debug functions
+
+Regardless of the way you are using Godlike (compiled it on top of PHP or just injected it as prepend script), you have access to the following classes:
+
+### Timer
+
+Useful for identifying slow parts of your application. All time values are in microseconds.
+
+#### tick
+
+```php
+\godlike\Timer::tick(string $key, bool $silent, bool $real)
+```
+
+Parameters:
+ - key    -  Name of the event that took place. Default 'MAIN'.
+ - silent - Weather or not to log current tick in the Godlike's log file. Default false.
+ - real   -  Indicates if real or seeded time should be used. Default true.
+
+Log format:
+```
+<Current timestamp> [Timer] <key> <sequential tick with this key> <time elapsed from previous tick with this key> <time elapsed from first tick with the this key> <time elapsed from beggining of request>  
+```
+
+Example log entry:
+```
+[2019-11-19 14:41:55.000] [TIMER] [MAIN] #1: 12, 12, 40397
+[2019-11-19 14:41:55.000] [TIMER] [Validation] #1: 12, 12, 41496
+[2019-11-19 14:41:55.000] [TIMER] [Validation] #2: 568, 580, 42064
+```
+
+#### getMessages
+
+```php
+\godlike\Timer::getMessages()
+```
+
+Returns array containing information about all ticks:
+
+Response format:
+```
+Timer-<key>-<sequential tick with this key>: <time elapsed from previous tick with this key>, <time elapsed from first tick with the this key>, <time elapsed from beggining of request>  
+```
+
+Example response:
+```
+[
+    'Timer-MAIN-1: 12, 12, 40397',
+    'Timer-Validation-1: 12, 12, 41496',
+    'Timer-Validation-2: 568, 580, 42064',
+]
+```
+
+#### clear
+
+```php
+\godlike\Timer::clear()
+```
+
+Clears all ticks.
+
+
+#### Logger
+
+Useful for identifying the flow of the application. Note, that message will be truncated to 150 symbols.
+ 
+#### header
+
+```php
+\godlike\Logger::header(string $title, bool $silent, bool $real)
+```
+
+Parameters:
+ - title  - Self explanatory.
+ - silent - Weather or not to log in the Godlike's log file. Default false.
+ - real   - Indicates if real or seeded time should be used. Default true.
+
+#### log
+
+```php
+\godlike\Logger::log(mixed $data, bool $silent, bool $real)
+```
+
+Parameters:
+ - data   - Self explanatory. Accepts any type of data as long as it can by json_encoded. Note: strings and numeric data will not be json encoded. 
+ - silent - Weather or not to log in the Godlike's log file. Default false.
+ - real   - Indicates if real or seeded time should be used. Default true.
+
+#### getMessages
+
+```php
+\godlike\Logger::getMessages()
+```
+
+Returns array containing all headers and messages.
+
+
+#### clear
+
+```php
+\godlike\Timer::clear()
+```
+
+Clears all headers and messages.

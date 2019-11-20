@@ -67,7 +67,11 @@ class Timer {
         $offset = $time - $timer['time'];
         $duration = $time - ($id > 1 ? $timer['ticks'][$id - 2]['time'] : $timer['time']);
 
-        $timer['ticks'][] = [$duration, $offset, $time];
+        $timer['ticks'][] = [
+            'duration' => $duration,
+            'offset' => $offset,
+            'time' => $time
+        ];
 
         if ($timer['silent']) return;
 
@@ -87,7 +91,7 @@ class Timer {
         foreach (self::$timers as $key => $timer) {
             foreach ($timer['ticks'] as $i => $tick) {
                 $id = $i + 1;
-                $messages[] = "Timer-$key-$id: $tick[0], $tick[1], $tick[2]";
+                $messages[] = "Timer-$key-$id: {$tick['duration']}, {$tick['offset']}, {$tick['time']}";
             }
         }
 

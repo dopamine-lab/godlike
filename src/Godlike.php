@@ -249,6 +249,11 @@ final class Godlike {
             // This only applies to HTTP api, CLI works as usual.
             ob_start();
         }
+
+        //
+
+        Logger::setup($this->clock, $this->log);
+        Timer::setup($this->clock, $this->log);
     }
 
     /**
