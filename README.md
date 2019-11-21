@@ -52,7 +52,8 @@ Godlike exposes API endpoint which enables you to configure and reset your entir
 Postman collection, containing all available api requests exists in `postman` directory.
 Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest)
 
-### Configuration
+
+## Configuration
 
 Just set the `bin/prepend.php` as your php prepend script in `php.ini` or require it in `index.php`.
 *Optionally*, copy the `config.tpl.ini` to the same directory with the name `config.ini`.
