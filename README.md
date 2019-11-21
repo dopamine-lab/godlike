@@ -50,7 +50,7 @@ If enabled, Godlike will add additional response headers, that could be useful f
 
 Godlike exposes API endpoint which enables you to configure and reset your entire environment so no additional headers need to be used.
 Postman collection, containing all available api requests exists in `postman` directory.
-Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest)
+Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest).
 
 
 ## Configuration
