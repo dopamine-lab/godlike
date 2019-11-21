@@ -1,14 +1,13 @@
 # Godlike
 #### PHP debug tool for controlling time and randomness while testing. Predictability is all.
 
-## Overview
-
 Godlike is a collection of debug/help PHP classes intended to be prepended on every CGI or CLI PHP script.
 It allows time control and time travel, as well as seeding the RNG for complete predictability of every request even for random based software.
 
 Godlike also has the *experimental* ability to seed the RNG and system time on linux if libfaketime is installed. It will use /etc/faketimerc to set the timestamp.
 
 **IMPORTANT:** Godlike is made for **debug** and **testing** purposes only! Do not use it in production unless you know what you're doing.
+
 
 ## Usage
 
@@ -21,7 +20,20 @@ to track queries and log stats about time and query/transaction count.
 - Transactions in SQL statements are not supported (START TRANSACTION). Use only PDO::beginTransaction and such.
 - Only EXCEPTION error mode is supported. Exception will be thrown otherwise.
 
-## Response headers
+### Manipulating single requests
+
+One way to manipulate time and RNG is to add special headers to all requests that hit your API/website.
+
+| Header               | Allowed values | Description                                                                |
+|----------------------|----------------|----------------------------------------------------------------------------|
+| GODLIKE-NO-PREPEND   | true/false     | Disable all Godlike functions for current request                          |
+| GODLIKE-NO-SEED      | true/false     | Disable time & RNG seed for current request                                |
+| GODLIKE-NO-LOG       | true/false     | Disable logging for current request                                        |
+| GODLIKE-NAME         | string         | Used as label in logs                                                      |
+| GODLIKE-SEED-RNG     | string         | Use custom RNG seed for current request                                    |
+| GODLIKE-SEED-TIME    | timestamp      | Use custom timestamp for current request                                   |
+
+### Response headers
 
 If enabled, Godlike will add additional response headers, that could be useful for debug:
 
@@ -34,11 +46,16 @@ If enabled, Godlike will add additional response headers, that could be useful f
 | X-Godlike-R-Time          |  Server time & timestamp of this request                                              |
 | X-Godlike-R-Transactions  |  Number of SQL transactions and total time spent in transaction                       |
 
-## Usage
+### API
 
-If you want to configure godlike, copy the config.tpl.ini to the same directory with the name `config.ini`.
+Godlike exposes API endpoint which enables you to configure and reset your entire environment so no additional headers need to be used.
+Postman collection, containing all available api requests exists in `postman` directory.
+Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest)
 
-Besides that, just set the bin/prepend.php as your php prepend script in php.ini or require it in index.php.
+### Configuration
+
+Just set the `bin/prepend.php` as your php prepend script in `php.ini` or require it in `index.php`.
+*Optionally*, copy the `config.tpl.ini` to the same directory with the name `config.ini`.
 
 Additional ini configurations available if you are using compiled Godlike:
 
@@ -55,30 +72,9 @@ Additional ini configurations available if you are using compiled Godlike:
 | stats_transactions   | 1/0            | Enable or disable MySQL transactions info header                           |
 
 
-#### Manipulating single requests
-
-One way to manipulate time and RNG is to add special headers to all requests that hit your API/website.
-
-| Header               | Allowed values | Description                                                                |
-|----------------------|----------------|----------------------------------------------------------------------------|
-| GODLIKE-NO-PREPEND   | true/false     | Disable all Godlike functions for current request                          |
-| GODLIKE-NO-SEED      | true/false     | Disable time & RNG seed for current request                                |
-| GODLIKE-NO-LOG       | true/false     | Disable logging for current request                                        |
-| GODLIKE-NAME         | string         | Used as label in logs                                                      |
-| GODLIKE-SEED-RNG     | string         | Use custom RNG seed for current request                                    |
-| GODLIKE-SEED-TIME    | timestamp      | Use custom timestamp for current request                                   |
-
-
-#### API
-
-Godlike exposes API endpoint which enables you to configure and reset your entire environment so no additional headers need to be used.
-Postman collection, containing all available api requests exists in `postman` directory.
-Additionally API documentation can be found [here](https://documenter.getpostman.com/view/9531489/SW7Z48hm?version=latest)
-
-
 ## Logging
 
-If logs are enabled in config.ini, Godlike will log:
+If enabled in `config.ini`, Godlike will log:
  - Type of request (CLI/CGI) together with it's full ID (process sequential number and name, if provided via GODLIKE-NAME header).
  - Current date and timestamp.
  - RNG seed - initial seed value and number of requests after initial seed.
@@ -86,7 +82,7 @@ If logs are enabled in config.ini, Godlike will log:
  - Total execution time.
  - Every query together with it's params and execution time. 
  
-Example log entry:
+Example:
 
 ```
     ================================================================================
