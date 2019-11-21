@@ -1,20 +1,20 @@
 # Godlike
-#### A cool PHP debug tool
-
----
+#### PHP debug tool for controlling time and randomness while testing. Predictability is all.
 
 ## Overview
 
-This is a collection of debug/help PHP classes,
-intended to be prepended on every CGI or CLI PHP script. 
+Godlike is a collection of debug/help PHP classes intended to be prepended on every CGI or CLI PHP script.
+It allows time control and time travel, as well as seeding the RNG for complete predictability of every request even for random based software.
 
-*Disclaimer:* Godlike is **not safe or recommended** to be used on production. 
+Godlike also has the *experimental* ability to seed the RNG and system time on linux if libfaketime is installed. It will use /etc/faketimerc to set the timestamp.
+
+**IMPORTANT:** Godlike is made for **debug** and **testing** purposes only! Do not use it in production unless you know what you're doing.
+
+## Usage
 
 Just require the ```prepend.php``` file in the beginning of the entry point PHP script (usually index.php).
 If PDO is compiled for override (PDO class name is changed to PDO_original), the main script will also override PDO
 to track queries and log stats about time and query/transaction count.
-
-Godlike also has the ability to seed the RNG and system time on linux if libfaketime is installed.
 
 **PDO override restrictions:**
 - MySQL autocommit OFF is not supported. It will just not work as expected.
@@ -53,7 +53,6 @@ Additional ini configurations available if you are using compiled Godlike:
 | stats_duration       | 1/0            | Enable or disable request duration info header                             |
 | stats_queries        | 1/0            | Enable or disable queries info header                                      |
 | stats_transactions   | 1/0            | Enable or disable MySQL transactions info header                           |
-
 
 
 #### Manipulating single requests
