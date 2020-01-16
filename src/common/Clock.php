@@ -29,7 +29,7 @@ final class Clock {
      *
      * @return int
      */
-    public function unix(bool $real = false): int {
+    public function unix(bool $real = false): ?int {
         return __godlike_timestamp_cache($real)[2];
     }
 
@@ -38,7 +38,7 @@ final class Clock {
      *
      * @return int
      */
-    public function milli(bool $real = false): int {
+    public function milli(bool $real = false): ?int {
         return __godlike_timestamp_cache($real)[1];
     }
 
@@ -47,7 +47,7 @@ final class Clock {
      *
      * @return int
      */
-    public function micro(bool $real = false): int {
+    public function micro(bool $real = false): ?int {
         return __godlike_timestamp_cache($real)[0];
     }
 
